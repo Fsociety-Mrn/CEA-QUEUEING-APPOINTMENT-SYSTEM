@@ -20,7 +20,7 @@ class Face_Recognition:
         self.facenet = InceptionResnetV1(pretrained='vggface2').eval().to(self.device)
         
         # load known faces data
-        self.Saved_Data = torch.load('Jojo_loRecognition/Model/data.pt', map_location='cpu')
+        self.Saved_Data = torch.load('Jolo_Recognition/Model/data.pt', map_location='cpu')
         self.Embeding_List = self.Saved_Data[0]
         self.Name_List = self.Saved_Data[1]
     
@@ -90,13 +90,13 @@ class Face_Recognition:
                         return (self.Name_List[idx_min], percent)
                     else:
                
-                        return ('No match detected', None)
+                        return ('No match detected', "")
                 
                 else:
-                    return ('No match detected', None)
+                    return ('No match detected', "")
                 
             else:
-                ('No match detected', None)
+                ('No match detected', "")
                 
     # training from dataset
     def Face_Train(self, Dataset_Folder="Jolo_Recognition/Registered-Faces", location="Jolo_Recognition/Model"):
