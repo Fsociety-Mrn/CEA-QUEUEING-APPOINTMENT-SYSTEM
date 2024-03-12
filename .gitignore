@@ -1,0 +1,4 @@
+/.env
+/test.py
+/JWT/__pycache__
+/Database/__pycache__
