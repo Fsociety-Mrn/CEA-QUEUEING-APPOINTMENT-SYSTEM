@@ -1,18 +1,21 @@
 from flask import Flask, Response, request, jsonify
 from flask_cors import CORS
-
+from functools import wraps
 from Jolo_Recognition.Face_Recognition import Face_Recognition as Jolo
 from Database.database import MySQL_Database as Database
 from JWT.JWT import JWT as TokenGenerator
+from dotenv import load_dotenv
 
-
+import os
 import cv2
 import time
-import hashlib
+
 
 app = Flask(__name__)
 CORS(app)
 
+load_dotenv()
+app.config['SECRET_KEY'] = os.environ.get("ACCESS_TOKEN")
 """
 BASIC HTTP REQUEST
 
@@ -45,19 +48,30 @@ HTTP CODE
         
         
 """
- 
-# Define your salt token
-SALT = "hellofriend"
 
 # Function to authenticate token
 def authenticate_token(token):
-    # You can use any secure hashing algorithm
-    # Here, SHA-256 is used
-    hashed_token = hashlib.sha256((token + SALT).encode()).hexdigest()
-    print(hashed_token)
+    
     # Compare the hashed token with the expected hash
-    return SALT == token
-   
+    return app.config['SECRET_KEY'] == token
+
+# Decorator function to check access token before accessing the route
+def requires_access_token(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        # Check if Authorization header is present
+        if 'Authorization' not in request.headers:
+            return jsonify({'message': 'Authorization header is missing'}), 401
+
+        # Extract the access token from the Authorization header
+        auth_header = request.headers['Authorization']
+
+        # Verify the access token
+        if authenticate_token(auth_header):
+            return f(*args, **kwargs)
+        else:
+            return jsonify({'message': 'Invalid access token'}), 401
+    return decorated
 
 # ------------------- Facial recognition Function
 @app.route('/video_feed')
@@ -135,12 +149,12 @@ def Facial_Recognition(camera=None, face_detector=None):
         yield (b'--frame\r\n'
                 b'Content-Type: image/jpeg\r\n\r\n' + frame_encoded.tobytes() + b'\r\n')
         
-
+# ------------------- login Function
 @app.route('/login_as_admin', methods=['POST'])
+@requires_access_token
 def login():
     
     try:
-    
         # Get the JSON data from the request body
         data = request.json
     
@@ -148,7 +162,7 @@ def login():
         username = data['username']
         password = data['password']
     
-        result,message = Database().login_as_admin(username=username,password=password)
+        result,message,userID,Username = Database().login_as_admin(username=username,password=password)
         status = 400
 
         # Check if username and password are provided
@@ -163,8 +177,8 @@ def login():
     
         # token generator value
         payload = {
-            "sub": username,
-            "aud": "admin"
+            "userID": userID, 
+            "sub": Username,
         }
     
         # data to return
@@ -175,8 +189,7 @@ def login():
 
         if result:
             status = 200
-            data['refreshToken'] = TokenGenerator().generate_refresh_token(payload=payload)
-            data['accessToken'] = TokenGenerator().generate_access_token(payload=payload)
+            data['idToken'] = TokenGenerator().generate_access_token(payload=payload,minutes=30)
 
         return jsonify(data), status
 
@@ -186,7 +199,67 @@ def login():
             'login status': False,
         }), 500 
 
+# ------------------- check user is login
+@app.route('/check_login', methods=['POST'])
+@requires_access_token
+def check_login():
+    id_token = request.json.get('idToken')
+    if not id_token:
+        return jsonify({'status':False,'message': 'ID token is missing'}), 400
+    
+    status,message,__ = TokenGenerator().verify_jwt_token(token=id_token)
+    
+    httpStatus = 200 if status else 400
 
+    return jsonify({'status':status, 'message': message}),httpStatus
+
+# ------------------- show appointment data
+@app.route('/show_appointment', methods=['POST'])
+@requires_access_token
+def show_appointment():
+    
+    try:
+ 
+        # Get the JSON data from the request body
+        data = request.json
+    
+        table = data['table']
+        
+        data = Database().read_appointment(table=table)
+        return jsonify(data),200
+
+    except:
+
+        return jsonify({
+            "please provide valid data",
+        }), 500 
+        
+# ------------------- show appointment data
+@app.route('/update_appointment', methods=['POST'])
+@requires_access_token
+def update_appointment():
+    
+    try:
+ 
+        # Get the JSON data from the request body
+        data = request.json
+
+        status = data['status']
+        id_value = data['id_value']
+        uid_value = data['uid_value']
+
+        
+        data = Database().update_appointment(
+            status=status,
+            id_value=id_value,
+            uid_value=uid_value)
+        
+        return jsonify({"message":"data has been updated"}),200
+
+    except:
+        return jsonify({ "message": "data is not available",}), 400 
+    
+    
 if __name__ == '__main__':
     app.run(
         host='0.0.0.0',

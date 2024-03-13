@@ -25,6 +25,7 @@ class JWT:
     def __init__(self):
         load_dotenv()
         self.SECRET_KEY = os.environ.get("SECRET")
+        print(self.SECRET_KEY)
         
     # Generate the ID JWT token
     def generate_ID_token(self,payload={},algorithm="HS256"):
@@ -55,7 +56,7 @@ class JWT:
     
         
     # Generate the access JWT token
-    def generate_access_token(self,payload={},algorithm="HS256",minutes=15):
+    def generate_access_token(self,payload={},algorithm="HS256",minutes=30):
         
         # Note: refresh token valid for 7 to 30 days
         payload=payload
@@ -85,31 +86,24 @@ class JWT:
             payload = jwt.decode(token, self.SECRET_KEY, algorithms=algorithms)
             print("verify_jwt_token: " , payload)
             
-            return {
-                    "status": False,
-                    "message": "token is valid",
-                    "decoded data: " : payload
-                }
+            return True,"token is valid",payload
+  
             
         except jwt.ExpiredSignatureError:
             # Token has expired
             print("Token has expired.")
             
-            return {
-                "status": True,
-                "message": "token is expired"
-            }
+            return False,"token is expired",None
             
         except jwt.InvalidTokenError:
             
             # Token is invalid
             print("Invalid token.")
             
-            return {
-                "status": True,
-                "message": "invalid token"
-            }
-        
-        
-# access = JWT().generate_access_token(payload={"data":"helllofriend"})
+            return False,"Invalid token",None
+
+
+            
+# access = JWT().verify_jwt_token(token=id_token)
 # print(access)
+

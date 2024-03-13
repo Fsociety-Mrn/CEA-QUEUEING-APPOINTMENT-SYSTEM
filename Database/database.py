@@ -1,7 +1,6 @@
 import mysql.connector
 import shutil
 import os
-
 from datetime import datetime
 
 class MySQL_Database:
@@ -57,7 +56,99 @@ class MySQL_Database:
         conn.close()
         
         return result
+    
+    
+    # read specific data
+    def __read_specific_Data(self,tableName,id_value,uid_value,status):
+        try:
+
+            conn = self.__connection()
+            cursor = conn.cursor()
+
+  
+            # Delete the specified record from the HISTORY table
+            read_query = f"SELECT * FROM `{tableName}` WHERE id = %s AND uid = %s"
+            cursor.execute(read_query, (id_value, uid_value))
+            data = cursor.fetchone()
+
+            if data:
+                cursor.close()
+                conn.close()
+                
+                data = list(data)
+                data[8] = status
+                return tuple(data[1:])
         
+            cursor.close()
+            conn.close()
+            print("No data")
+            return None
+
+        except mysql.connector.Error as err:
+            
+            print("Error:", err)
+            cursor.close()
+            conn.close()
+            return None
+
+    # insert specific data
+    def __insert_specific_Data(self,tableName,Data):
+        try:
+
+            conn = self.__connection()
+            cursor = conn.cursor()
+
+            # Execute INSERT query
+            insert_query = f"INSERT INTO `{tableName}` (`id`, `name`, `section`, `department`, `course`, `professor`, `date`, `uid`, `status`) VALUES (NULL, %s, %s, %s, %s, %s, %s, %s, %s)"
+            cursor.execute(insert_query, Data)
+
+            # Commit the transaction
+            conn.commit()
+        
+            cursor.close()
+            conn.close()
+            print("data inserted")
+            return True
+
+        except mysql.connector.Error as err:
+            
+            print("Error:", err)
+            cursor.close()
+            conn.close()
+            return False
+    
+    # delete specific data
+    def __delete_specific_Data(self,tableName,id_value,uid_value):
+        try:
+
+            conn = self.__connection()
+            cursor = conn.cursor()
+
+  
+            # Delete the specified record from the HISTORY table
+            delete_query = f"DELETE FROM `{tableName}` WHERE id = %s AND uid = %s"
+
+            cursor.execute(delete_query, (id_value, uid_value))
+            conn.commit()
+
+            if cursor.rowcount > 0:
+                cursor.close()
+                conn.close()
+                print("Data deleted successfully!")
+                return "Data deleted successfully!"
+        
+            cursor.close()
+            conn.close()
+            print("No matching record found.")
+            return "No matching record found."
+
+        except mysql.connector.Error as err:
+            
+            print("Error:", err)
+            cursor.close()
+            conn.close()
+            return err
+
     # create table for history
     def create_table_history(self,stereo):
         print("create table")
@@ -85,16 +176,20 @@ class MySQL_Database:
             print("login_as_admin: ", cursor.fetchall())
         
             # Check if password is correct
-            cursor.execute("SELECT `id` FROM users WHERE username=%s AND password=%s", (username, password))
-            
-            if cursor.fetchone():
+            cursor.execute("SELECT `id`,`username` FROM users WHERE username=%s AND password=%s", (username, password))
+            user_data = cursor.fetchone()  # Fetch the row if it exists
+
+
+            if user_data:
+                
+                user_id, username = user_data  # Unpack the data if needed
                 cursor.close()
                 conn.close()
-                return True,"login successful"
+                return True,"login successful",user_id,username
 
             cursor.close()
             conn.close()
-            return False,"invalid password"
+            return False,"invalid password",None,None
         
         except Exception as Err:
             print("login_as_admin:", Err)
@@ -102,283 +197,64 @@ class MySQL_Database:
             cursor.close()
             conn.close()
             
-            return False
+            return False,"invalid password",None,None
     
-
-
-# # ----    ------------ check name
-# def __checkName(name=None):
-#     try:
-#         conn = connection()
-#         cursor = conn.cursor()
-#         # Create the query
-#         insert_query = "SELECT COUNT(*) FROM `registered` WHERE name = %s"
-#         query = (name,)
-#         cursor.execute(insert_query, query)
-#         result = cursor.fetchone()
+    # READ the appointment table
+    def read_appointment(self,table):
+        try:
+            conn = self.__connection()
+            cursor = conn.cursor(dictionary=True)
         
-#         print(result[0])
-        
-#         if result[0] > 0:
-#             return False
-#         else:
-#             return True
-        
-#     except mysql.connector.Error as err:
-#         print("Error:", err)
-#         result = str(err) 
-        
-#     # Close the cursor and connection
-#     cursor.close()
-#     conn.close()
-    
-#     return result
+            # Select all rows from the HISTORY table
+            select_query = f"SELECT * FROM `{table}`"
+            cursor.execute(select_query)
 
-# # create data in Registerede table
-# def createRegister(name=None,type=None):
-#     result = ""
-#     try:
-#         conn = connection()
-#         cursor = conn.cursor()
-
-#         if __checkName(name):
-
-#             # Insert data into the HISTORY table
-#             insert_query = """
-#             INSERT INTO `registered` (name, type)
-#             VALUES (%s, %s)
-#             """
-#             query = (name, type)
-#             cursor.execute(insert_query, query)
-#             conn.commit()
-
-#         print("Data inserted successfully!")
-#         result = "Data inserted successfully!"
-
-#     except mysql.connector.Error as err:
-#         print("Error:", err)
-#         result = str(err)
-
-#     # Close the cursor and connection
-#     cursor.close()
-#     conn.close()
-    
-#     return result
-
-# # create data in History table
-# def createHistory(name=None):
-#     result = ""
-#     # Get the current date and time
-#     now = datetime.now()
-
-#     # Format the date as "Month day year"
-#     formatted_date = now.strftime("%B %d %Y")
-
-#     # Format the time as "hour:minuteam/pm"
-#     formatted_time = now.strftime("%I:%M%p")
-
-#     try:
-#         conn = connection()
-#         cursor = conn.cursor()
-        
-
-#         # Insert data into the HISTORY table
-#         insert_query = """
-#         INSERT INTO `history` (name, time, date)
-#         VALUES (%s, %s, %s)
-#         """
-#         query = (name, formatted_time, formatted_date)
-#         cursor.execute(insert_query, query)
-#         conn.commit()
-
-#         print("Data inserted successfully!")
-#         result = "Data inserted successfully!"
-
-#     except mysql.connector.Error as err:
-#         print("Error:", err)
-#         result = str(err)
-
-#     # Close the cursor and connection
-#     cursor.close()
-#     conn.close()
-    
-#     return result
-
-# # Read data from registere table
-# def readRegistered():
-#     try:
-#         conn = connection()
-#         cursor = conn.cursor()
-
-#         # Select all rows from the HISTORY table
-#         select_query = "SELECT * FROM `registered` WHERE type = 'Guest'"
-#         cursor.execute(select_query)
-
-#         # Fetch all rows from the result set
-#         rows = cursor.fetchall()
-
-#         # Convert rows to array
-#         data_list = []
-#         for row in rows:
-#             row_array = list(row)
-#             data_list.append(row_array)
-
-
-#         cursor.close()
-#         conn.close()
-
-#         # Return the JSON response
-#         return data_list
-
-#     except mysql.connector.Error as err:
-#         print("Error:", err)
-#         return None
-
-# def __readNameGuest():
-#     try:
-#         conn = connection()
-#         cursor = conn.cursor()
-
-#         # Select all rows from the HISTORY table
-#         select_query = "SELECT `name` FROM `registered` WHERE type = 'Guest'"
-#         cursor.execute(select_query)
-
-#         # Fetch all rows from the result set
-#         rows = cursor.fetchall()
-
-#         # Convert rows to array
-#         data_list = []
-#         for row in rows:
-#             data_list.append(row[0])
+            # Fetch all rows from the result set
+            rows = cursor.fetchall()
             
-#             folder_path = "Jojo_loRecognition/Registered-Faces/" + row[0]  # Replace `row[0]` with the specific folder name
+            
 
-#             # Delete the folder
-#             shutil.rmtree(folder_path)
-#             print(row)
+            # Convert rows to array
+             # Transform rows into JSON-like dictionaries
+            data_list = [{
+                'id': row['id'],
+                'name': row['name'],
+                'section': row['section'],
+                'department': row['department'],
+                'course': row['course'],
+                'professor': row['professor'],
+                'date': row['date'],
+                'uid': row['uid'],
+                'status': row['status']
+            } for row in rows]
 
-#         cursor.close()
-#         conn.close()
+            cursor.close()
+            conn.close()
 
-#         # Return the JSON response
-#         return data_list
+            # Return the JSON response
+            return rows
 
-#     except mysql.connector.Error as err:
-#         print("Error:", err)
-#         return None   
+        except mysql.connector.Error as err:
+            print("Error:", err)
+            cursor.close()
+            conn.close()
+            return None
 
-# # Read data from history table
-# def readHistory():
-#     try:
-#         conn = connection()
-#         cursor = conn.cursor()
-
-#         # Select all rows from the HISTORY table
-#         select_query = "SELECT * FROM `history`"
-#         cursor.execute(select_query)
-
-#         # Fetch all rows from the result set
-#         rows = cursor.fetchall()
-
-#         # Convert rows to array
-#         data_list = []
-#         for row in rows:
-#             row_array = list(row)
-#             data_list.append(row_array)
-
-
-#         cursor.close()
-#         conn.close()
-
-#         # Return the JSON response
-#         return rows
-
-#     except mysql.connector.Error as err:
-#         print("Error:", err)
-#         return None
-
-# # # update data in History table
-# def updateHistory(ID=None,Images=None, new_name=None, new_time_in=None, new_date=None):
-#     try:
-#         conn = connection()
-#         cursor = conn.cursor()
-
-#         # Update the specified record in the HISTORY table
-#         update_query = "UPDATE HISTORY SET person = %s, name = %s, time = %s, date = %s WHERE ID = %s"
-#         query = (Images,new_name, new_time_in, new_date, ID)
-#         cursor.execute(update_query, query)
-#         conn.commit()
-
-#         if cursor.rowcount > 0:
-#             print("Data updated successfully!")
-#         else:
-#             print("No matching record found.")
-
-#     except mysql.connector.Error as err:
-#         print("Error:", err)
-
-#     # Close the cursor and connection
-#     cursor.close()
-#     conn.close()
-
-# # delete data in History table
-# def deleteRegistered():
-    
-#     try:
-
-#         conn = connection()
-#         cursor = conn.cursor()
-
-#         # delete folder first
-#         __readNameGuest()
+    # UPDATE the appointment table
+    def update_appointment(self,uid_value,id_value,status):
+        data = self.__read_specific_Data(
+            tableName="fillup",
+            uid_value=uid_value,
+            id_value=id_value,
+            status=status)
         
-#         # Delete the specified record from the HISTORY table
-#         delete_query = "DELETE FROM `registered` WHERE type = 'Guest'"
+        self.__insert_specific_Data(Data=data,tableName="proceed")
+        self.__delete_specific_Data(tableName="fillup",id_value=id_value,uid_value=uid_value)
+    
+    
+# data = MySQL_Database().read_specific_Data(tableName="fillup", id_value=26, uid_value="9Q")
+# print(data)
 
-#         cursor.execute(delete_query)
-#         conn.commit()
+# MySQL_Database().insert_specific_Data(Data=data,tableName="proceed")
 
-#         if cursor.rowcount > 0:
-#             cursor.close()
-#             conn.close()
-#             print("Data deleted successfully!")
-#             return "Data deleted successfully!"
-#         else:
-#             cursor.close()
-#             conn.close()
-#             print("No matching record found.")
-#             return "No matching record found."
-
-#     except mysql.connector.Error as err:
-#         print("Error:", err)
-
-#         cursor.close()
-#         conn.close()
-#         return err
-
-#     # Close the cursor and connection
- 
-# # Delete data in the HISTORY table
-# def deleteHistory():
-#     try:
-#         conn = connection()
-#         cursor = conn.cursor()
-
-#         # Delete all records from the HISTORY table
-#         delete_query = "DELETE FROM `history`"
-
-#         cursor.execute(delete_query)
-#         conn.commit()
-
-#         cursor.close()
-#         conn.close()
-
-#         print("Data deleted successfully!")
-#         return "Data deleted successfully!"
-#     except mysql.connector.Error as err:
-#         print("Error:", err)
-#         return str(err)
-
-
-# print(MySQL_Database().login_as_admin("admisdasdn","1234"))
-
+# MySQL_Database().delete_Data(tableName="fillup",id_value=26,uid_value="9Q")
