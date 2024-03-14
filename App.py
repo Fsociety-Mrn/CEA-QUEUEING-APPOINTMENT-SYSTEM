@@ -162,8 +162,10 @@ def login():
         username = data['username']
         password = data['password']
     
-        result,message,userID,Username = Database().login_as_admin(username=username,password=password)
+        result,message,data_fromDB = Database().login_as_admin(username=username,password=password)
+
         status = 400
+        userID, username, name, birthday, sex, age = data_fromDB
 
         # Check if username and password are provided
         if 'username' not in data or 'password' not in data:
@@ -178,7 +180,7 @@ def login():
         # token generator value
         payload = {
             "userID": userID, 
-            "sub": Username,
+            "sub": username,
         }
     
         # data to return
@@ -190,6 +192,7 @@ def login():
         if result:
             status = 200
             data['idToken'] = TokenGenerator().generate_access_token(payload=payload,minutes=30)
+            data['data'] = data_fromDB
 
         return jsonify(data), status
 

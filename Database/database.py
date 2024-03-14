@@ -36,28 +36,35 @@ class MySQL_Database:
             return None
         
     # show all tables
-    def __listOfTables(self,index):
-        
+    def __listOfTables(self, table_name):
         conn = self.__connection()
         cursor = conn.cursor()
         cursor.execute("SHOW TABLES")
 
-        row = cursor.fetchall()
-
-        result = False
-
-        for table_name in row:
-            
-            if table_name[0] == index:
-                result = True
-                break
-        
+        tables = [row[0] for row in cursor.fetchall()]
         cursor.close()
         conn.close()
+
+        return table_name in tables
+
+    # str(datetime.today().strftime('%Y-%m-%d'))
+    def __create_table(self,table_name):
+        try:
+   
+            conn = self.__connection()
+            cursor = conn.cursor()
+            
+            cursor.execute(f"CREATE TABLE `{table_name}` (`id` INT NOT NULL AUTO_INCREMENT , `uid` VARCHAR(30000) NOT NULL , `name` VARCHAR(30000) NOT NULL , `timein` VARCHAR(30000) NOT NULL , `status` VARCHAR(30000) NOT NULL , PRIMARY KEY (`id`));")
+            print("New table created")
+            
+            cursor.close()
+            conn.close()
+            
+            return True
+        except mysql.connector.Error as Err:
+            print("__create_table: ",Err)
+            return False
         
-        return result
-    
-    
     # read specific data
     def __read_specific_Data(self,tableName,id_value,uid_value,status):
         try:
@@ -78,6 +85,34 @@ class MySQL_Database:
                 data = list(data)
                 data[8] = status
                 return tuple(data[1:])
+        
+            cursor.close()
+            conn.close()
+            print("No data")
+            return None
+
+        except mysql.connector.Error as err:
+            
+            print("Error:", err)
+            cursor.close()
+            conn.close()
+            return None
+        
+    # read specific data
+    def __read_specific_data_user(self,name):
+        try:
+
+            conn = self.__connection()
+            cursor = conn.cursor()
+
+            read_query = f"SELECT * FROM `users` WHERE id = %s"
+            cursor.execute(read_query, (1,))
+            data = cursor.fetchone()
+            print(data)
+            if data:
+                cursor.close()
+                conn.close()
+                return data
         
             cursor.close()
             conn.close()
@@ -173,23 +208,21 @@ class MySQL_Database:
             
             # Consume the result set
             cursor.fetchall()
-            print("login_as_admin: ", cursor.fetchall())
         
             # Check if password is correct
-            cursor.execute("SELECT `id`,`username` FROM users WHERE username=%s AND password=%s", (username, password))
+            cursor.execute("SELECT `id`,`username`,`name`,`birthday`,`sex`,`age` FROM users WHERE username=%s AND password=%s", (username, password))
             user_data = cursor.fetchone()  # Fetch the row if it exists
 
 
             if user_data:
-                
-                user_id, username = user_data  # Unpack the data if needed
+           
                 cursor.close()
                 conn.close()
-                return True,"login successful",user_id,username
+                return True,"login successful",user_data
 
             cursor.close()
             conn.close()
-            return False,"invalid password",None,None
+            return False,"invalid password",None
         
         except Exception as Err:
             print("login_as_admin:", Err)
@@ -197,7 +230,7 @@ class MySQL_Database:
             cursor.close()
             conn.close()
             
-            return False,"invalid password",None,None
+            return False,"invalid password",None
     
     # READ the appointment table
     def read_appointment(self,table):
@@ -251,10 +284,60 @@ class MySQL_Database:
         self.__insert_specific_Data(Data=data,tableName="proceed")
         self.__delete_specific_Data(tableName="fillup",id_value=id_value,uid_value=uid_value)
     
+    # create prof attendance 
+    def create_table_or_insert(self,name):
+        try:
+            
+            card_uid = self.__read_specific_data_user(name=name)
+
+            date_today =str(datetime.today().strftime('%Y-%m-%d'))
+            time_now = str(datetime.now().strftime("%I:%M %p"))
+        
+            # create table
+            if not self.__listOfTables(table_name=date_today):
+                self.__create_table(table_name=date_today)
+        
+            conn = self.__connection()
+            cursor = conn.cursor()
+            
+            # Check if prof is already login
+            cursor.execute(f"SELECT `id` FROM `{date_today}` WHERE name=%s", (str(name),))
+            user_id = cursor.fetchone()
+            
+            print(user_id)
+            if user_id:
+                cursor.close()
+                conn.close()
+                print("use already login")
+                return "user already login"
+            
+            # Consume the result set
+            cursor.fetchall()
+                
+            # Execute INSERT query
+            insert_query = f"INSERT INTO `{date_today}` (`id`, `uid`, `name`, `timein`, `status`) VALUES (NULL, %s, %s, %s, %s)"
+            cursor.execute(insert_query, (name,card_uid[1],time_now,"In Office"))
+
+            # Commit the transaction
+            conn.commit()
+        
+            cursor.close()
+            conn.close()
+            print("data inserted")
+            
+            # insert table
+            return "insert table successfully"
+        except Exception as e:
+            print("insert: ",e)
+            return "error occur"
+
+        
+        
     
 # data = MySQL_Database().read_specific_Data(tableName="fillup", id_value=26, uid_value="9Q")
 # print(data)
 
-# MySQL_Database().insert_specific_Data(Data=data,tableName="proceed")
+MySQL_Database().create_table_or_insert(name="Hello Friend")
 
 # MySQL_Database().delete_Data(tableName="fillup",id_value=26,uid_value="9Q")
+
