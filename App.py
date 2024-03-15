@@ -16,6 +16,9 @@ CORS(app)
 
 load_dotenv()
 app.config['SECRET_KEY'] = os.environ.get("ACCESS_TOKEN")
+app.config["FACE_RESULT"] = ""
+app.config["CAMERA_STATUS"] = "Please wait camera is Loading"
+
 """
 BASIC HTTP REQUEST
 
@@ -51,7 +54,6 @@ HTTP CODE
 
 # Function to authenticate token
 def authenticate_token(token):
-    
     # Compare the hashed token with the expected hash
     return app.config['SECRET_KEY'] == token
 
@@ -77,10 +79,18 @@ def requires_access_token(f):
 @app.route('/video_feed')
 def video_feed():
     
+    app.config["FACE_RESULT"] = ""
+    app.config["CAMERA_STATUS"] = "Please wait camera is Loading"
+    app.config["database"] = False
+
+    cv2.destroyAllWindows()
+    
     # Check if the 'token' parameter is provided in the request
     token = request.args.get('token')
     if not token or not authenticate_token(token):
         return Response("Unauthorized", status=401)
+    
+    
     
     # load a camera,face detection
     camera = cv2.VideoCapture(0)
@@ -94,29 +104,35 @@ def Facial_Recognition(camera=None, face_detector=None):
     # result
     Name,percent="",""
     
-    # color
-    B , G , R = (0,255,255)
-
     # Initialize the timer and the start time
     timer = 0
     start_time = time.time()
-    
+    # color
+    B , G , R = (0,255,255)
+        
     while True:
         
         # Capture a frame from the camera
         ret, frame = camera.read()
         
         if not ret:
-            print("camera is not detcted")
+            app.config["CAMERA_STATUS"] = "camera is not detected"
             break
+        
+     
 
         frame = cv2.flip(frame,1)
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         
         # Detect faces in the frame
         faces = face_detector.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=20, minSize=(100, 100), flags=cv2.CASCADE_SCALE_IMAGE)
-   
+
+
+        app.config["CAMERA_STATUS"] = "No Face is detected"
+    
         for (x, y, w, h) in faces:
+            
+            app.config["CAMERA_STATUS"] = "FACIAL RECOGNITION"
                             
             
             # Increment the timer by the elapsed time since the last send
@@ -129,8 +145,17 @@ def Facial_Recognition(camera=None, face_detector=None):
                 # facial comparison 
                 Name,percent = Jolo().Face_Compare(image=frame)
                 
+                B, G, R = (0, 0, 255)
+                
+                if not "No match detected" == Name:
+                    B, G, R = (0, 255, 0)
+                    app.config["FACE_RESULT"] = Name
+                    
+                    
+                
                 # border color
-                B, G, R = (0, 0, 255) if "No match detected" == Name else (0, 255, 0)
+                # B, G, R = (0, 0, 255) if "No match detected" == Name else (0, 255, 0)
+                
                         
                 # display accurate threshold every 2 seconds
                 percent = "{:.2f}%".format(percent) if not percent == "" else percent 
@@ -148,7 +173,30 @@ def Facial_Recognition(camera=None, face_detector=None):
         _, frame_encoded  = cv2.imencode('.png', frame)
         yield (b'--frame\r\n'
                 b'Content-Type: image/jpeg\r\n\r\n' + frame_encoded.tobytes() + b'\r\n')
+
+@app.route('/get_Facial_login_status', methods=['GET'])
+@requires_access_token
+def get_Facial_login_status():
+    
+    face_result = app.config["FACE_RESULT"] 
+    if not face_result == "":
+        message, result = Database().create_table_or_insert(name=app.config["FACE_RESULT"] )
+
+        return jsonify({
+                'message': message,
+                'face_result': face_result,
+                'result': result
+            }), 200
         
+    app.config["FACE_RESULT"] = ""
+    app.config["CAMERA_STATUS"] = "Please wait camera is Loading"
+    
+    return jsonify({
+                'message': app.config["CAMERA_STATUS"],
+                'face_result': app.config["FACE_RESULT"],
+                'result': False
+            }), 200
+
 # ------------------- login Function
 @app.route('/login_as_admin', methods=['POST'])
 @requires_access_token
@@ -157,7 +205,7 @@ def login():
     try:
         # Get the JSON data from the request body
         data = request.json
-    
+
         # Extract username and password from the request data
         username = data['username']
         password = data['password']
@@ -165,7 +213,7 @@ def login():
         result,message,data_fromDB = Database().login_as_admin(username=username,password=password)
 
         status = 400
-        userID, username, name, birthday, sex, age = data_fromDB
+        userID,uid,username,name = data_fromDB
 
         # Check if username and password are provided
         if 'username' not in data or 'password' not in data:
@@ -222,13 +270,15 @@ def check_login():
 def show_appointment():
     
     try:
- 
+        
         # Get the JSON data from the request body
         data = request.json
-    
         table = data['table']
+        name= data['name']
         
-        data = Database().read_appointment(table=table)
+   
+        data = Database().read_appointment(table=table,name=str(name))
+    
         return jsonify(data),200
 
     except:
@@ -237,11 +287,10 @@ def show_appointment():
             "please provide valid data",
         }), 500 
         
-# ------------------- show appointment data
-@app.route('/update_appointment', methods=['POST'])
+# ------------------- update appointment data
+@app.route('/update_appointment', methods=['PUT'])
 @requires_access_token
 def update_appointment():
-    
     try:
  
         # Get the JSON data from the request body
@@ -250,7 +299,6 @@ def update_appointment():
         status = data['status']
         id_value = data['id_value']
         uid_value = data['uid_value']
-
         
         data = Database().update_appointment(
             status=status,
@@ -261,6 +309,22 @@ def update_appointment():
 
     except:
         return jsonify({ "message": "data is not available",}), 400 
+    
+# ------------------- GET professor today 
+@app.route('/get_professor_today', methods=['GET'])
+@requires_access_token
+def get_professor_today():
+    
+    try:
+ 
+
+        data = Database().get_prof_today()
+        
+        return jsonify(data),200
+
+    except:
+        return jsonify({ "message": "data is not available",}), 400 
+    
     
     
 if __name__ == '__main__':

@@ -27,7 +27,7 @@ class MySQL_Database:
             cursor = connection_result.cursor()
             cursor.execute("SELECT VERSION()")
             result = cursor.fetchone()
-            print(result)
+       
 
             return connection_result
 
@@ -55,7 +55,7 @@ class MySQL_Database:
             cursor = conn.cursor()
             
             cursor.execute(f"CREATE TABLE `{table_name}` (`id` INT NOT NULL AUTO_INCREMENT , `uid` VARCHAR(30000) NOT NULL , `name` VARCHAR(30000) NOT NULL , `timein` VARCHAR(30000) NOT NULL , `status` VARCHAR(30000) NOT NULL , PRIMARY KEY (`id`));")
-            print("New table created")
+    
             
             cursor.close()
             conn.close()
@@ -88,12 +88,12 @@ class MySQL_Database:
         
             cursor.close()
             conn.close()
-            print("No data")
+            print("__read_specific_Data: No data")
             return None
 
         except mysql.connector.Error as err:
             
-            print("Error:", err)
+            print("__read_specific_Data:", err)
             cursor.close()
             conn.close()
             return None
@@ -108,7 +108,7 @@ class MySQL_Database:
             read_query = f"SELECT * FROM `users` WHERE id = %s"
             cursor.execute(read_query, (1,))
             data = cursor.fetchone()
-            print(data)
+      
             if data:
                 cursor.close()
                 conn.close()
@@ -142,7 +142,7 @@ class MySQL_Database:
         
             cursor.close()
             conn.close()
-            print("data inserted")
+
             return True
 
         except mysql.connector.Error as err:
@@ -169,7 +169,7 @@ class MySQL_Database:
             if cursor.rowcount > 0:
                 cursor.close()
                 conn.close()
-                print("Data deleted successfully!")
+ 
                 return "Data deleted successfully!"
         
             cursor.close()
@@ -184,13 +184,6 @@ class MySQL_Database:
             conn.close()
             return err
 
-    # create table for history
-    def create_table_history(self,stereo):
-        print("create table")
-              
-    def facial_login(self,name):
-        print("hellofriend")
-    
     # Login as admin
     def login_as_admin(self, username=None, password=None):
         try:
@@ -210,15 +203,16 @@ class MySQL_Database:
             cursor.fetchall()
         
             # Check if password is correct
-            cursor.execute("SELECT `id`,`username`,`name`,`birthday`,`sex`,`age` FROM users WHERE username=%s AND password=%s", (username, password))
+            cursor.execute("SELECT `id`,`uid`,`username`,`name` FROM users WHERE username=%s AND password=%s", (username, password))
             user_data = cursor.fetchone()  # Fetch the row if it exists
 
 
             if user_data:
-           
+                data = [user for user in user_data]
+  
                 cursor.close()
                 conn.close()
-                return True,"login successful",user_data
+                return True,"login successful",data
 
             cursor.close()
             conn.close()
@@ -233,33 +227,33 @@ class MySQL_Database:
             return False,"invalid password",None
     
     # READ the appointment table
-    def read_appointment(self,table):
+    def read_appointment(self,table,name):
         try:
+
             conn = self.__connection()
             cursor = conn.cursor(dictionary=True)
         
             # Select all rows from the HISTORY table
-            select_query = f"SELECT * FROM `{table}`"
-            cursor.execute(select_query)
+            select_query = f"SELECT * FROM `{table}` WHERE professor=%s"
+            cursor.execute(select_query,(name,))
 
             # Fetch all rows from the result set
             rows = cursor.fetchall()
             
-            
-
             # Convert rows to array
-             # Transform rows into JSON-like dictionaries
-            data_list = [{
-                'id': row['id'],
-                'name': row['name'],
-                'section': row['section'],
-                'department': row['department'],
-                'course': row['course'],
-                'professor': row['professor'],
-                'date': row['date'],
-                'uid': row['uid'],
-                'status': row['status']
-            } for row in rows]
+            # Transform rows into JSON-like dictionaries
+            # data_list = [{
+            #     'id': row['id'],
+            #     'name': row['name'],
+            #     'section': row['section'],
+            #     'department': row['department'],
+            #     'course': row['course'],
+            #     'professor': row['professor'],
+            #     'date': row['date'],
+            #     'uid': row['uid'],
+            #     'status': row['status']
+            # } for row in rows]
+
 
             cursor.close()
             conn.close()
@@ -304,40 +298,59 @@ class MySQL_Database:
             cursor.execute(f"SELECT `id` FROM `{date_today}` WHERE name=%s", (str(name),))
             user_id = cursor.fetchone()
             
-            print(user_id)
+   
             if user_id:
                 cursor.close()
                 conn.close()
-                print("use already login")
-                return "user already login"
+              
+                return f"{name} already login",True
             
             # Consume the result set
             cursor.fetchall()
                 
             # Execute INSERT query
             insert_query = f"INSERT INTO `{date_today}` (`id`, `uid`, `name`, `timein`, `status`) VALUES (NULL, %s, %s, %s, %s)"
-            cursor.execute(insert_query, (name,card_uid[1],time_now,"In Office"))
+            cursor.execute(insert_query, (card_uid[1],name,time_now,"In Office"))
 
             # Commit the transaction
             conn.commit()
         
             cursor.close()
             conn.close()
-            print("data inserted")
+
             
             # insert table
-            return "insert table successfully"
+            return f"{name} successfully login",True
         except Exception as e:
             print("insert: ",e)
-            return "error occur"
+            return "error occur",False
 
+    def get_prof_today(self):        
+        try:
+            date_today = str(datetime.today().strftime('%Y-%m-%d'))
+            
+            conn = self.__connection()
+            cursor = conn.cursor()
+            
+            # Check if prof is already login
+            cursor.execute(f"SELECT `name` FROM `{date_today}` WHERE status=%s", (str("In Office"),))
+            data = cursor.fetchall()
+            
+            # data fetched
+            data_list = [row[0] for row in data]
+                
+            return data_list
+        
+        except:
+            print("get_prof_today: error occue")
+            return None
         
         
-    
-# data = MySQL_Database().read_specific_Data(tableName="fillup", id_value=26, uid_value="9Q")
-# print(data)
+        
+# MSQL = MySQL_Database()
 
-MySQL_Database().create_table_or_insert(name="Hello Friend")
+# # message, result = MSQL.create_table_or_insert(name="Hello Friend")
+# # print(message)
+# # print(result)
 
-# MySQL_Database().delete_Data(tableName="fillup",id_value=26,uid_value="9Q")
-
+# MSQL.get_prof_today()
