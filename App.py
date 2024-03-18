@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 import os
 import cv2
 import time
+import shutil
 
 
 app = Flask(__name__)
@@ -18,7 +19,7 @@ load_dotenv()
 app.config['SECRET_KEY'] = os.environ.get("ACCESS_TOKEN")
 app.config["FACE_RESULT"] = ""
 app.config["CAMERA_STATUS"] = "Please wait camera is Loading"
-
+app.config["ACCOUNT_CREATED"] = ""
 """
 BASIC HTTP REQUEST
 
@@ -74,6 +75,106 @@ def requires_access_token(f):
         else:
             return jsonify({'message': 'Invalid access token'}), 401
     return decorated
+
+
+@app.route('/facial_update')
+def facial_update():
+    
+    app.config["FACE_RESULT"] = ""
+    app.config["CAMERA_STATUS"] = "Please wait camera is Loading"
+    app.config["database"] = False
+
+    cv2.destroyAllWindows()
+    
+    # Check if the 'token' parameter is provided in the request
+    token = request.args.get('token')
+    if not token or not authenticate_token(token):
+        return Response("Unauthorized", status=401)
+
+    # load a camera,face detection
+    camera = cv2.VideoCapture(0)
+    face_detection = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+
+    # create folder
+    user_account = app.config["ACCOUNT_CREATED"]
+    if user_account == "":
+        return Response("Please register first", status=401)
+    
+    path = f"Jolo_Recognition/Registered-Faces/{user_account}"
+        
+    if os.path.exists(path):
+        # Remove all contents of the folder
+        shutil.rmtree(path)
+        
+    # Create the known faces folder if it doesn't exist
+    os.makedirs(path, exist_ok=True)
+            
+    return Response(Facial_Update(camera=camera, face_detector=face_detection, dir=path), 
+                        mimetype='multipart/x-mixed-replace; boundary=frame')
+
+def Facial_Update(camera=None, face_detector=None, dir=None):
+
+    capture=1
+    
+    # color
+    B , G , R = (0,255,0)
+    
+    while True:
+        
+        # Capture a frame from the camera
+        ret, frame = camera.read()
+        
+        if not ret:
+            app.config["CAMERA_STATUS"] = "camera is not detected"
+            break
+
+        frame = cv2.flip(frame,1)
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        
+        # Detect faces in the frame
+        faces = face_detector.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=20, minSize=(100, 100), flags=cv2.CASCADE_SCALE_IMAGE)
+        app.config["CAMERA_STATUS"] = "No Face is detected"
+    
+        for (x, y, w, h) in faces:
+            app.config["CAMERA_STATUS"] = "Please align your face on the camera properly"
+            
+            if len(os.listdir(dir))==20:
+                camera.release()
+                cv2.destroyAllWindows()
+                app.config["ACCOUNT_CREATED"] = "Facial Complete"
+                break
+                
+            cv2.imwrite(dir + "/" +str(capture)+".png", frame)     
+            capture+=1
+           
+            # Get the coordinates of the face,draw rectangele and put text
+            cv2.rectangle(frame, (x, y), (x+w, y+h), (B,G,R), 2)
+            
+        _, frame_encoded  = cv2.imencode('.png', frame)
+        yield (b'--frame\r\n'
+                b'Content-Type: image/jpeg\r\n\r\n' + frame_encoded.tobytes() + b'\r\n')
+
+@app.route('/get_Facial_register_status', methods=['GET'])
+@requires_access_token
+def get_Facial_register_status():
+    
+    face_result = app.config["ACCOUNT_CREATED"] 
+    if not face_result == "Facial Complete":
+
+        return jsonify({
+                'message': app.config["CAMERA_STATUS"],
+                'result': False
+            }), 200
+        
+    app.config["FACE_RESULT"] = ""
+    app.config["CAMERA_STATUS"] = "Please wait camera is Loading"
+    app.config["ACCOUNT_CREATED"] = ""
+    
+    return jsonify({
+                'message': "Facial Register Complete",
+                'result': True
+            }), 200
+
 
 # ------------------- Facial recognition Function
 @app.route('/video_feed')
@@ -205,7 +306,7 @@ def login():
     try:
         # Get the JSON data from the request body
         data = request.json
-
+  
         # Extract username and password from the request data
         username = data['username']
         password = data['password']
@@ -249,6 +350,53 @@ def login():
             'message': "please provide username or password",
             'login status': False,
         }), 500 
+
+@app.route('/change_password', methods=['PUT'])
+@requires_access_token
+def change_password():
+    try:
+        # Get the JSON data from the request body
+        data = request.json
+  
+        # Extract username and password from the request data
+        uid = data['uid']
+        old_password = data['old_password']
+        new_password = data['new_password']
+    
+        result,message = Database().update_password(uid=uid,old_password=old_password,new_password=new_password)
+        status = 200 if result else 401
+        return jsonify(message), status
+    
+
+    except:
+        return jsonify({
+            'message': "Invalid password schema",
+            'login status': False,
+        }), 500 
+
+
+@app.route('/create_account', methods=['POST'])
+@requires_access_token
+def create_account():
+    try:
+        # Get the JSON data from the request body
+        data = request.json
+  
+        # Extract username and password from the request data
+        uid = data['uid']
+        name = data['name']
+        username = data['username']
+        password = data['password']
+
+        
+        result,message = Database().create_account(uid,name,username,password)
+        status = 200 if result else 401
+        app.config["ACCOUNT_CREATED"] = name if status else ""
+        
+        return jsonify(message), status
+
+    except:
+        return jsonify({"Invalid password schema"}), 500 
 
 # ------------------- check user is login
 @app.route('/check_login', methods=['POST'])
@@ -314,18 +462,11 @@ def update_appointment():
 @app.route('/get_professor_today', methods=['GET'])
 @requires_access_token
 def get_professor_today():
-    
     try:
- 
-
         data = Database().get_prof_today()
-        
         return jsonify(data),200
-
     except:
         return jsonify({ "message": "data is not available",}), 400 
-    
-    
     
 if __name__ == '__main__':
     app.run(

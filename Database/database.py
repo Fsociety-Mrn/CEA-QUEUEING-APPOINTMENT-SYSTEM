@@ -1,6 +1,4 @@
 import mysql.connector
-import shutil
-import os
 from datetime import datetime
 
 class MySQL_Database:
@@ -226,6 +224,63 @@ class MySQL_Database:
             
             return False,"invalid password",None
     
+    # update password
+    def update_password(self, uid=None,new_password=None, old_password=None):
+        try:
+            conn = self.__connection()
+            cursor = conn.cursor()
+        
+            # Check if username exists
+            cursor.execute("UPDATE `users` SET `password`=%s WHERE `id`= %s AND password=%s", (new_password,uid,old_password,))
+            conn.commit()
+            
+            # Fetch the number of rows updated
+            rows_updated = cursor.rowcount
+            resultText,result = "invalid password",False
+            
+            if bool(rows_updated):
+                resultText,result = "password updated",True
+                
+            print("Number of rows updated:", bool(rows_updated))
+            
+            # close db connection
+            cursor.close()
+            conn.close()
+            return result,resultText
+        
+        except Exception as Err:
+            print("update_password:", Err)
+            
+            cursor.close()
+            conn.close()
+            
+            return False,"invalid password"
+    
+    # create account
+    def create_account(self,uid,name,username,password ):
+        try:
+
+            conn = self.__connection()
+            cursor = conn.cursor()
+
+            # Execute INSERT query
+            insert_query = "INSERT INTO `users` (`id`, `uid`, `name`, `username`, `password`) VALUES (NULL, %s, %s, %s, %s)"
+            cursor.execute(insert_query, (uid,name,username,password,))
+
+            # Commit the transaction
+            conn.commit()
+        
+            cursor.close()
+            conn.close()
+
+            return True,"Account created!"
+
+        except mysql.connector.Error as err:
+            
+            print("Error:", err)
+            cursor.close()
+            conn.close()
+            return False,"Account could not created"
     # READ the appointment table
     def read_appointment(self,table,name):
         try:
@@ -353,4 +408,4 @@ class MySQL_Database:
 # # print(message)
 # # print(result)
 
-# MSQL.get_prof_today()
+# MSQL.create_account(uid="gusto ako lang gusto",name="KIYO MAPAGMAHAL",password="ikawlang",username="@kiyo")
