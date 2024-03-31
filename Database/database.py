@@ -103,8 +103,8 @@ class MySQL_Database:
             conn = self.__connection()
             cursor = conn.cursor()
 
-            read_query = f"SELECT * FROM `users` WHERE id = %s"
-            cursor.execute(read_query, (1,))
+            read_query = f"SELECT * FROM `users` WHERE name = %s"
+            cursor.execute(read_query, (name,))
             data = cursor.fetchone()
       
             if data:
@@ -182,6 +182,41 @@ class MySQL_Database:
             conn.close()
             return err
 
+    
+     # update password
+    
+    # update status today
+    def __update_status(self, date, status, rfid):
+        try:
+            conn = self.__connection()
+            cursor = conn.cursor()
+        
+            # Check if username exists
+            cursor.execute(f"UPDATE `{date}` SET `status`=%s WHERE `uid`= %s", (status,rfid,))
+            conn.commit()
+            
+            # Fetch the number of rows updated
+            rows_updated = cursor.rowcount
+            resultText,result = "invalid password",False
+            
+            if bool(rows_updated):
+                resultText,result = "password updated",True
+                
+            print("Number of rows updated:", bool(rows_updated))
+            
+            # close db connection
+            cursor.close()
+            conn.close()
+            return result,resultText
+        
+        except Exception as Err:
+            print("update_password:", Err)
+            
+            cursor.close()
+            conn.close()
+            
+            return False,"invalid password"
+        
     # Login as admin
     def login_as_admin(self, username=None, password=None):
         try:
@@ -223,6 +258,42 @@ class MySQL_Database:
             conn.close()
             
             return False,"invalid password",None
+    
+    # verify RFID
+    def verify_rfid(self,rfid):
+        try:
+            
+            date_today = str(datetime.today().strftime('%Y-%m-%d'))
+                      
+            conn = self.__connection()
+            cursor = conn.cursor()
+        
+            # Check if password is correct
+            cursor.execute(f"SELECT `status` FROM `{date_today}` WHERE uid=%s", (rfid,))
+            user_data = cursor.fetchone()  # Fetch the row if it exists
+
+            if user_data:
+                
+                print(user_data)
+                cursor.close()
+                conn.close()
+                
+                status = 'On Break' if user_data[0] == 'In Office' else 'In Office'
+                
+                self.__update_status(date=date_today,rfid=rfid,status=status)
+                return True,"rfid is verified",status
+
+            cursor.close()
+            conn.close()
+            return False,"invalid rfid",None
+        
+        except Exception as Err:
+            print("verify_rfid:", Err)
+            
+            cursor.close()
+            conn.close()
+            
+            return False,"invalid rfid",None
     
     # update password
     def update_password(self, uid=None,new_password=None, old_password=None):
@@ -281,6 +352,7 @@ class MySQL_Database:
             cursor.close()
             conn.close()
             return False,"Account could not created"
+    
     # READ the appointment table
     def read_appointment(self,table,name):
         try:
@@ -338,6 +410,8 @@ class MySQL_Database:
         try:
             
             card_uid = self.__read_specific_data_user(name=name)
+            
+            print(card_uid)
 
             date_today =str(datetime.today().strftime('%Y-%m-%d'))
             time_now = str(datetime.now().strftime("%I:%M %p"))
@@ -400,7 +474,7 @@ class MySQL_Database:
             print("get_prof_today: error occue")
             return None
         
-        
+
         
 # MSQL = MySQL_Database()
 
@@ -408,4 +482,5 @@ class MySQL_Database:
 # # print(message)
 # # print(result)
 
+# print(MSQL.verify_rfid("787998388386"))
 # MSQL.create_account(uid="gusto ako lang gusto",name="KIYO MAPAGMAHAL",password="ikawlang",username="@kiyo")

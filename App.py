@@ -398,6 +398,37 @@ def create_account():
     except:
         return jsonify({"Invalid password schema"}), 500 
 
+@app.route('/verify_rfid', methods=['POST'])
+@requires_access_token
+def verify_rfid():
+    try:
+        # Get the JSON data from the request body
+        data = request.json
+  
+        # Extract rfid the request data
+        RFID = data['rfid']
+
+        result,message,data_fromDB = Database().verify_rfid(rfid=RFID)
+    
+
+        status = 401
+
+        if result:
+            status = 200
+            data['status'] = result
+            data['message'] = message
+            data['data'] = data_fromDB
+
+        return jsonify(data), status
+
+    except:
+        return jsonify({
+            'status': False,
+            'message': "please tap your RFID",
+            'data': None
+        }), 500 
+
+
 # ------------------- check user is login
 @app.route('/check_login', methods=['POST'])
 @requires_access_token

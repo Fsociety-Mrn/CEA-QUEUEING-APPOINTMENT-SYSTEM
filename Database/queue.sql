@@ -40,8 +40,8 @@ CREATE TABLE `2024-03-15` (
 --
 
 INSERT INTO `2024-03-15` (`id`, `uid`, `name`, `timein`, `status`) VALUES
-(1, 'aklsdjklasjdk23', 'Hello Friend', '06:59 PM', 'In Office'),
-(2, 'aklsdjklasjdk23', 'MR ROBOT', '07:50 PM', 'In Office');
+(1, '787998388386', 'Hello Friend', '06:59 PM', 'In Office'),
+(2, '582307308360', 'MR ROBOT', '07:50 PM', 'In Office');
 
 -- --------------------------------------------------------
 
@@ -62,7 +62,7 @@ CREATE TABLE `2024-03-18` (
 --
 
 INSERT INTO `2024-03-18` (`id`, `uid`, `name`, `timein`, `status`) VALUES
-(1, 'aklsdjklasjdk23', 'Hello Friend', '07:47 PM', 'In Office');
+(1, '787998388386', 'Hello Friend', '07:47 PM', 'In Office');
 
 -- --------------------------------------------------------
 
@@ -132,8 +132,8 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `uid`, `name`, `username`, `password`) VALUES
-(1, 'aklsdjklasjdk23', 'Hello Friend', 'admin', '1234'),
-(3, 'ASDASDASDASD', 'MR ROBOT', 'mrrobot', '0101'),
+(1, '787998388386', 'Hello Friend', 'admin', '1234'),
+(3, '582307308360', 'MR ROBOT', 'mrrobot', '0101'),
 (8, 'NOT AVAILABLE', 'check register', '@checkregister', 'NOT AVAILABLE');
 
 --
