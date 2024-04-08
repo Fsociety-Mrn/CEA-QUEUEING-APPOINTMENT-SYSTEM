@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Design</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        .input-container {
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #notification {
+            display: none;
+            background-color: rgba(0, 123, 255, 0.8);
+            color: #fff;
+            border-radius: 5px;
+            padding: 10px;
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="input-container">
+            <h2>Login Status</h2>
+            <input type="text" id="name" placeholder="Name">
+            <input type="text" id="status" placeholder="Status">
+        </div>
+        <a  href="facial.html">
+            <button id="button1" >Use Facial Recognition</button>
+        </a>
+      
+    </div>
+
+    <div id="notification"></div>
+
+    <script src="./EnvSecret.js"></script>
+    <script>
+        async function verify_rfid(rfid, name) {
+            try {
+                const response = await fetch(mySecrets().api + "/verify_rfid", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': mySecrets().secret
+                    },
+                    body: JSON.stringify({
+                        rfid: rfid
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const NameElement = document.getElementById('name');
+                    const StatusElement = document.getElementById('status');
+                    NameElement.value = name;
+                    StatusElement.value = data.data;
+
+                    // Display notification
+                    const notification = document.getElementById('notification');
+                    notification.textContent = name + " is " + data.data;
+                    notification.style.display = 'block';
+
+                    // Reload the page after a short delay
+                    setTimeout(() => {
+                        location.reload();
+                    }, 3000);
+
+                } else {
+                    throw new Error(`Error: ${response.status} ${response.statusText}`);
+                }
+            } catch (error) {
+                console.error('There was a problem with the fetch operation:', error);
+                const notification = document.getElementById('notification');
+                notification.textContent = 'Please Login before tap your RFID';
+                notification.style.display = 'block';
+                throw error;
+            }
+        }
+
+        async function get_RFID() {
+            try {
+                const response = await fetch(mySecrets().raspberry + "/get_rfid", {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    await verify_rfid(data.ID, data.TEXT);
+                } else {
+                    throw new Error(`Error: ${response.status} ${response.statusText}`);
+                }
+            } catch (error) {
+                console.error('There was a problem with the fetch operation:', error);
+                const notification = document.getElementById('notification');
+                notification.textContent = 'There was a problem with the fetch operation: ' + error.message;
+                notification.style.display = 'block';
+                throw error;
+            }
+        }
+
+        get_RFID();
+    </script>
+</body>
+</html>
