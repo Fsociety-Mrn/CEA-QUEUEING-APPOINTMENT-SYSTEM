@@ -180,9 +180,23 @@
   
   <script src="../EnvSecret.js"></script>
   <script src="./Javascript/CheckLogin.js"></script>
+  <script src="./Javascript/Notification.js"></script>
 
   <script >
+    window.onload = async function() {
+      const getName = sessionStorage.getItem("name")
+      console.log(getName)
 
+      const data = await getTotal(getName,'reject')
+      const data2 = await getTotal(getName,'proceed')
+      console.log(data)
+      console.log(data2)
+
+      document.getElementById("total-students-today").innerHTML = data2;
+      document.getElementById("rejected-students-today").innerHTML = data;
+      
+
+    };
     function Logout(){
       sessionStorage.clear();
       window.location.href = '/admin/Login.php'; 

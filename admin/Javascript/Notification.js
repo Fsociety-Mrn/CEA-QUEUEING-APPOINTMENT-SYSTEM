@@ -1,10 +1,13 @@
 window.onload = async function() {
     const getName = sessionStorage.getItem("name")
-    console.log(getName)
+    
+    // console.log(getName)
     // fetch data
     await appointment("fillup",String(getName),"pending","")
     await appointment("proceed",String(getName),"accept","proceed")
     await appointment("proceed",String(getName),"reject","reject")
+
+
 };
 
 async function appointment(tableName,name,dataTable,type){
@@ -29,6 +32,64 @@ async function appointment(tableName,name,dataTable,type){
    
     } catch (error) {
       console.error('There was a problem with the fetch operation:', error);
+    }
+}
+
+// GET TOTAL STUDENTS PER DAY 
+async function getTotal(getName,type){
+
+    try {
+        const response = await fetch(mySecrets().api + "/show_appointment", {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'Authorization': mySecrets().secret
+          },
+          body: JSON.stringify({
+            table: "proceed",
+            name: getName
+          })
+      });
+
+     
+      const data = await response.json();
+
+
+        // Get the current date
+        const currentDate = new Date().toISOString().slice(0, 10);
+
+        return data.filter(data=>data.status === type && new Date(data.date).toISOString().slice(0, 10) === currentDate).length
+  
+    } catch (error) {
+      console.error('There was a problem with the fetch operation:', error);
+      return 0;
+    }
+}
+
+// GET TOTAL STUDENTS PER DAY 
+async function getAllAppointment(getName){
+
+    try {
+        const response = await fetch(mySecrets().api + "/show_appointment", {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'Authorization': mySecrets().secret
+          },
+          body: JSON.stringify({
+            table: "proceed",
+            name: getName
+          })
+      });
+
+     
+      const data = await response.json();
+
+      return data;
+
+    } catch (error) {
+      console.error('There was a problem with the fetch operation:', error);
+      return 0;
     }
 }
 
@@ -72,7 +133,7 @@ function renderTableData(data,tableName,type) {
 
 }
 
-// update appointmen
+// update appointment
 async function update_appointment(status,id_value,uid_value){
 
     try {

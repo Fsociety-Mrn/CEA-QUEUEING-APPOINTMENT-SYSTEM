@@ -1,1 +1,4 @@
 /.env
+/Database/__pycache__
+/JWT
+/JWT/__pycache__
