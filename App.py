@@ -187,11 +187,9 @@ def video_feed():
     cv2.destroyAllWindows()
     
     # Check if the 'token' parameter is provided in the request
-    token = request.args.get('token')
-    if not token or not authenticate_token(token):
-        return Response("Unauthorized", status=401)
-    
-    
+    # token = request.args.get('token')
+    # if not token or not authenticate_token(token):
+    #     return Response("Unauthorized", status=401)
     
     # load a camera,face detection
     camera = cv2.VideoCapture(0)
@@ -257,9 +255,11 @@ def Facial_Recognition(camera=None, face_detector=None):
                 # border color
                 # B, G, R = (0, 0, 255) if "No match detected" == Name else (0, 255, 0)
                 
-                        
-                # display accurate threshold every 2 seconds
-                percent = "{:.2f}%".format(percent) if not percent == "" else percent 
+                try:  
+                    # display accurate threshold every 2 seconds
+                    percent = "{:.2f}%".format(percent) if not percent == "" or percent == None else percent 
+                except:
+                    pass
 
                 # Reset the timer and the start time
                 timer = 0
@@ -267,7 +267,7 @@ def Facial_Recognition(camera=None, face_detector=None):
            
             # Get the coordinates of the face,draw rectangele and put text
             cv2.rectangle(frame, (x, y), (x+w, y+h), (B,G,R), 2)
-            cv2.putText(frame,Name + " " + percent,(x -60,y+h+30),cv2.FONT_HERSHEY_COMPLEX,1,(B,G,R),1)
+            cv2.putText(frame,Name + " " + str(percent),(x -60,y+h+30),cv2.FONT_HERSHEY_COMPLEX,1,(B,G,R),1)
             
 
             
@@ -372,6 +372,31 @@ def change_password():
         return jsonify({
             'message': "Invalid password schema",
             'login status': False,
+        }), 500 
+
+@app.route('/change_rfid', methods=['PUT'])
+@requires_access_token
+def change_rfid():
+    try:
+        # Get the JSON data from the request body
+        data = request.json
+  
+        # Extract old and new rfid from the request data
+        old_rfid = data['old_rfid']
+        new_rfid = data['new_rfid']
+    
+        result,message = Database().update_rfid(new_rfid=new_rfid,old_rfid=old_rfid)
+        status = 200 if result else 401
+        return jsonify({
+            'message': message,
+            'status': result
+        }), status
+    
+
+    except:
+        return jsonify({
+            'message': "error encounter",
+            'status': False
         }), 500 
 
 

@@ -295,6 +295,71 @@ class MySQL_Database:
             
             return False,"invalid rfid",None
     
+    def update_rfid(self,new_rfid=None,old_rfid=None):
+        try:
+            conn = self.__connection()
+            cursor = conn.cursor()
+        
+            # Check if username exists
+            cursor.execute("UPDATE `users` SET `uid`=%s WHERE `uid`= %s", (new_rfid,old_rfid,))
+            conn.commit()
+            
+            # Fetch the number of rows updated
+            rows_updated = cursor.rowcount
+            resultText,result = "invalid RFID",False
+            
+            if bool(rows_updated):
+                resultText,result = "Your RFID is updated. You'll be logged out. Please log in again using Facial Recognition",True
+                
+            print("Number of rows updated:", bool(rows_updated))
+            
+            # close db connection
+            cursor.close()
+            conn.close()
+            return result,resultText
+        
+        except Exception as Err:
+            print("update_password:", Err)
+            
+            cursor.close()
+            conn.close()
+            
+            return False,"invalid password"
+        
+    def update_rfid_today(self,new_rfid=None,name=None):
+        try:
+            conn = self.__connection()
+            cursor = conn.cursor()
+
+            date_today = str(datetime.today().strftime('%Y-%m-%d'))
+
+            # Check if username exists
+            cursor.execute(f"UPDATE `{date_today}` SET `uid`=%s WHERE `name`= %s",(new_rfid,name,))
+            conn.commit()
+            
+            # Fetch the number of rows updated
+            rows_updated = cursor.rowcount
+            resultText,result = "invalid RFID",False
+            
+            if bool(rows_updated):
+                resultText,result = "Your RFID is updated. You'll be logged out",True
+                
+            print("Number of rows updated:", rows_updated)
+            
+            # close db connection
+            cursor.close()
+            conn.close()
+            return result,resultText
+        
+        except Exception as Err:
+            pass
+            print("update_password:", Err)
+            
+            cursor.close()
+            conn.close()
+            
+            return False,"invalid password"
+
     # update password
     def update_password(self, uid=None,new_password=None, old_password=None):
         try:
@@ -302,7 +367,7 @@ class MySQL_Database:
             cursor = conn.cursor()
         
             # Check if username exists
-            cursor.execute("UPDATE `users` SET `password`=%s WHERE `id`= %s AND password=%s", (new_password,uid,old_password,))
+            cursor.execute(f"UPDATE `users` SET `password`=%s WHERE `id`= %s AND password=%s", (new_password,uid,old_password,))
             conn.commit()
             
             # Fetch the number of rows updated
@@ -410,8 +475,9 @@ class MySQL_Database:
         try:
             
             card_uid = self.__read_specific_data_user(name=name)
-            
-            print(card_uid)
+
+            __,uid,name,__,__ = card_uid
+
 
             date_today =str(datetime.today().strftime('%Y-%m-%d'))
             time_now = str(datetime.now().strftime("%I:%M %p"))
@@ -429,8 +495,11 @@ class MySQL_Database:
             
    
             if user_id:
+       
                 cursor.close()
                 conn.close()
+
+                self.update_rfid_today(name=name,new_rfid=uid)
               
                 return f"{name} already login",True
             
@@ -478,9 +547,13 @@ class MySQL_Database:
         
 # MSQL = MySQL_Database()
 
-# # message, result = MSQL.create_table_or_insert(name="Hello Friend")
-# # print(message)
-# # print(result)
+# message, result = MSQL.create_table_or_insert(name="jegg")
+# print(message)
+# print(result)
 
+# MSQL.update_rfid_today()
 # print(MSQL.verify_rfid("787998388386"))
 # MSQL.create_account(uid="gusto ako lang gusto",name="KIYO MAPAGMAHAL",password="ikawlang",username="@kiyo")
+
+# rfid_result = MSQL.update_rfid(old_rfid="ABCD",new_rfid="787998388386")
+# print(rfid_result)
