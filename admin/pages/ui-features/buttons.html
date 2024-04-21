@@ -191,6 +191,7 @@
                 <table class="table table-hover" id="reject">
                   <thead>
                     <tr>
+                      <th>UID</th>
                       <th>Name</th>
                       <th>Section</th>
                       <th>Department</th>
@@ -253,6 +254,35 @@
       sessionStorage.clear();
       window.location.href = '/admin/Login.php'; 
     }
+
+    setInterval(async function() {
+  // Alert message to notify that the page is being reloaded
+
+  
+  // Reload the page
+    const getName = sessionStorage.getItem("name");
+  
+  // Uncomment the line below to verify if the value is retrieved correctly
+  // console.log(getName);
+  
+  if (getName) {
+      try {
+          // Perform the "fillup" appointment action
+          await appointment("fillup", String(getName), "pending", "");
+          
+          // Perform the "proceed" appointment action
+          await appointment("proceed", String(getName), "accept", "proceed");
+          
+          // Perform the "proceed" appointment action
+          await appointment("proceed", String(getName), "reject", "reject");
+      } catch (error) {
+          console.error("An error occurred during appointment actions:", error);
+      }
+  } else {
+      console.error("No value found for 'name' in sessionStorage.");
+  }
+}, 1000);
+
   </script>
   <!-- End custom js for this page-->
 </body>

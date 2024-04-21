@@ -150,7 +150,7 @@
                       <label for="npassword">New Password</label>
                       <input type="password" class="form-control" id="npassword" name="npassword" required>
                     </div>
-                    <button class="btn btn-primary" onclick="update_password()">Save Password</button>
+                    <button class="btn btn-primary" onclick="update_password();">Save Password</button>
 
                     <br/>
                     <br/>
@@ -161,7 +161,7 @@
                       <label for="npassword">CARD UID</label>
                       <input type="password" class="form-control" id="rfid" name="rfid" required>
                     </div>
-                    <button  class="btn btn-primary">Update RFID</button>
+                    <button id="RFID_BUTTON" class="btn btn-primary" onclick="update_rfid()">Update RFID</button>
 
 
    
@@ -214,6 +214,66 @@
       sessionStorage.clear();
       window.location.href = '/admin/Login.php'; 
     }
+
+    async function update_rfid(){
+
+      document.getElementById("RFID_BUTTON").textContent = "...."
+ 
+      try {
+        const response = await fetch(mySecrets().raspberry + "/post_rfid", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: sessionStorage.getItem("name"),
+          })
+        });
+
+
+        const data = await response.json();
+        console.log(data.ID)
+        await UPDATE_DATABASE_RFID(data.ID)
+
+
+      } catch (error) {
+        console.error('There was a problem with the fetch operation:', error);
+        document.getElementById("RFID_BUTTON").textContent = "Update RFID";
+      }
+    }
+
+    async function UPDATE_DATABASE_RFID(new_rfid){
+      var old_rfid = document.getElementById("rfid").value;
+
+      try {
+          const response = await fetch(mySecrets().api + "/change_rfid", {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': mySecrets().secret
+            },
+            body: JSON.stringify({
+              old_rfid: old_rfid,
+              new_rfid: new_rfid
+            })
+          });
+  
+         
+          const data = await response.json();
+          alert(data.message);
+          if (data.status){
+            Logout();
+            location.reload();
+            return
+          }
+
+          document.getElementById("RFID_BUTTON").textContent = "Update RFID";
+       
+      } catch (error) {
+          console.error('There was a problem with the fetch operation:', error);
+          document.getElementById("RFID_BUTTON").textContent = "Update RFID";
+      }
+}
   </script>
 
   <!-- End custom js for this page-->

@@ -1,14 +1,29 @@
 window.onload = async function() {
-    const getName = sessionStorage.getItem("name")
-    
-    // console.log(getName)
-    // fetch data
-    await appointment("fillup",String(getName),"pending","")
-    await appointment("proceed",String(getName),"accept","proceed")
-    await appointment("proceed",String(getName),"reject","reject")
-
-
+  const getName = sessionStorage.getItem("name");
+  
+  // Uncomment the line below to verify if the value is retrieved correctly
+  // console.log(getName);
+  
+  if (getName) {
+      try {
+          // Perform the "fillup" appointment action
+          await appointment("fillup", String(getName), "pending", "");
+          
+          // Perform the "proceed" appointment action
+          await appointment("proceed", String(getName), "accept", "proceed");
+          
+          // Perform the "proceed" appointment action
+          await appointment("proceed", String(getName), "reject", "reject");
+      } catch (error) {
+          console.error("An error occurred during appointment actions:", error);
+      }
+  } else {
+      console.error("No value found for 'name' in sessionStorage.");
+  }
 };
+
+
+
 
 async function appointment(tableName,name,dataTable,type){
 

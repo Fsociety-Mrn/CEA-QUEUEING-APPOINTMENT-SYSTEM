@@ -32,19 +32,24 @@
               </div>
              <!-- Login Form  -->
               <h6 class="font-weight-light">Sign in to continue.</h6>
-            <!-- <form method="POST" > -->
-               <div class="form-group">
+        
+                <div class="form-group">
                  <input type="text" name="username" class="form-control form-control-lg" id="username" placeholder="Username" required>
-              </div>
-                 <div class="form-group">
-                <input type="password" name="password" class="form-control form-control-lg" id="password" placeholder="Password" required>
-               </div>
-               <div class="mt-3">
-              <button type="submit" onclick="handleLoginForm()" class="btn btn-block btn-primary btn-lg font-weight-medium auth-form-btn">SIGN IN</button>
-              </div>
+                </div>
+
+                <div class="form-group">
+                  <input type="password" name="password" class="form-control form-control-lg" id="password" placeholder="Password" required>
+              
+                  <input type="checkbox" id="showPasswordCheckbox" onclick="togglePasswordVisibility()">
+                  <label for="showPasswordCheckbox">Show Password</label>
+                </div>
+
+                <div class="mt-3">
+                  <button type="submit" onclick="handleLoginForm()" class="btn btn-block btn-primary btn-lg font-weight-medium auth-form-btn">SIGN IN</button>
+                </div>
  
    
-            <!-- </form> -->
+
 
             </div>
           </div>
@@ -72,6 +77,17 @@
   <script src="./EnvSecret.js"></script>
   <script>
 
+function togglePasswordVisibility() {
+    var passwordField = document.getElementById("password");
+    var checkbox = document.getElementById("showPasswordCheckbox");
+    if (checkbox.checked) {
+        passwordField.type = "text";
+    } else {
+        passwordField.type = "password";
+    }
+}
+
+
     async function checkLogin() {
     try {
           const response = await fetch(mySecrets().api + "/check_login", {
@@ -97,8 +113,6 @@
         }else{
           sessionStorage.clear();
         }
-
-
      
     } catch (error) {
         console.error('There was a problem with the fetch operation:', error);
@@ -110,6 +124,17 @@
       sessionStorage.clear();
       var username = document.getElementById("username").value;
       var password = document.getElementById("password").value;
+
+      console.log(username,password)
+
+      if (username === "" && password === ""){
+        alert("Uh-oh! 😔 Please provide your username and password.");
+        return
+      }
+      if(username === "" || password === ""){
+        alert("Uh-oh! 😔 Please provide your username or password.");
+        return
+      }
 
         try {
           const response = await fetch(mySecrets().api + "/login_as_admin", {
@@ -128,12 +153,9 @@
         const data = await response.json();
         console.log(data)
 
-        console.log(data['idToken'])
-
         if (data['login status']) {
 
             // await checkLogin(data['idToken'])
-
             sessionStorage.setItem("idToken",data['idToken'])
             sessionStorage.setItem("userID",data.data[0])
             sessionStorage.setItem("cardUID",data.data[1])
@@ -141,6 +163,7 @@
             sessionStorage.setItem("name",data.data[3])
             window.location.href = '/admin/admin'; // Redirect to dashboard
         } else {
+            alert("Oops! 😔 Please check your username or password and try again.")
             document.getElementById('message').textContent = data.message;
         }
      

@@ -119,6 +119,8 @@
           
         </ul>
       </nav>
+
+      
       <!-- partial -->
       <div class="main-panel">
         <div class="content-wrapper">
@@ -128,6 +130,14 @@
                 <div class="card-body">
                   <h4 class="card-title">Activity Log</h4>
                   <div class="table-responsive">
+
+                    <!-- Filter inputs -->
+<label for="departmentFilter">Department:</label>
+<input type="text" id="departmentFilter">
+<label for="dateFilter">Date:</label>
+<input type="date" id="dateFilter">
+<button onclick="applyFilters()">Apply Filters</button>
+
                     <table class="table table-striped" id="activityTable">
                       <thead>
                         <tr>
@@ -201,6 +211,35 @@
 
 </body>
 <script>
+
+  // get all data
+  async function getAllAppointment(getName){
+
+try {
+    const response = await fetch(mySecrets().api + "/show_appointment", {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json',
+          'Authorization': mySecrets().secret
+      },
+      body: JSON.stringify({
+        table: "proceed",
+        name: getName
+      })
+  });
+
+ 
+  const data = await response.json();
+
+  return data;
+
+} catch (error) {
+  console.error('There was a problem with the fetch operation:', error);
+  return 0;
+}
+}
+  
+// on load the data
   window.onload = async function(){
     const getName = sessionStorage.getItem("name")
 
@@ -210,6 +249,7 @@
     renderTable(data)
   }
 
+  // table render
   function renderTable (data) {
     const tableBody = document.getElementById('activityTable').querySelector('tbody');
     tableBody.innerHTML = ''
@@ -230,22 +270,33 @@
            
           });
   }
-  /* 
-  $(document).ready(function() {
-    $('#activityTable').DataTable({
-      "pagingType": "full_numbers",
-      "lengthMenu": [
-        [10, 25, 50, -1],
-        [10, 25, 50, "All"]
-      ],
-      responsive: true,
-      language: {
-        search: "_INPUT_",
-        searchPlaceholder: "Search records",
-      }
+
+  //function for filter
+  async function applyFilters() {
+    const getName = sessionStorage.getItem("name")
+    originalData = await getAllAppointment(getName);
+    const departmentFilterValue = document.getElementById('departmentFilter').value.toLowerCase();
+    const dateFilterValue = document.getElementById('dateFilter').value;
+
+    // Function to convert the database date format to a comparable format (YYYY-MM-DD)
+    const convertDateFormat = dateString => {
+      const dateObj = new Date(dateString);
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0'); // Month is zero-based
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+  
+    const filteredData = originalData.filter(appointment => {
+      const departmentMatch = appointment.department.toLowerCase().includes(departmentFilterValue);
+
+      const dateMatch = dateFilterValue ? convertDateFormat(appointment.date) === dateFilterValue : true;
+      return departmentMatch && dateMatch;
     });
-  });
-  */
+  
+    renderTable(filteredData);
+  }
+
   </script>
 
   <script >
@@ -257,4 +308,3 @@
   
 
 </html>
-

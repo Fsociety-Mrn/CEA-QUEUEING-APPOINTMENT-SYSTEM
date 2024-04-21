@@ -1,3 +1,5 @@
+
+
 async function update_password(){
         var uid = sessionStorage.getItem("userID");
         var old_password = document.getElementById("cpassword").value;
@@ -28,6 +30,7 @@ async function update_password(){
           console.error('There was a problem with the fetch operation:', error);
       }
 }
+
 
 
 window.onload = function () {
