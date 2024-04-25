@@ -16,6 +16,8 @@
             border-radius: 10px;
             padding: 20px;
             margin: 10px;
+            height: 350px; 
+            overflow-y: auto; 
         }
 
         .table h2 {
@@ -33,6 +35,55 @@
              height: 50px; /* Adjust the height as needed */
         }
 
+        /*------------------------------------------------------------------
+[ Button ]*/
+.container-login100-form-btn {
+  width: 100%;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.login100-form-btn {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 20px;
+  width: 100%;
+  height: 50px;
+  border-radius: 10px;
+  background: #6675df;
+
+  font-family: Montserrat-Bold;
+  font-size: 12px;
+  color: #fff;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+
+  -webkit-transition: all 0.4s;
+  -o-transition: all 0.4s;
+  -moz-transition: all 0.4s;
+  transition: all 0.4s;
+}
+
+.login100-form-btn:hover {
+  background: #333333;
+}
+
+.containers_button {
+            display: flex;
+            flex-direction: row; /* Make it row to place items side by side */
+            justify-content: center;
+        }
   
 
       
@@ -72,6 +123,16 @@
             echo "No Pending";
         }
     ?>
+</div>
+
+<div class="containers_button" style="text-align: center; margin-top: 20px; ">
+
+    <div style="width: 200px;">
+        <a href="/jegg/login.html">
+            <button class="login100-form-btn">Employee Login</button>
+        </a>
+         
+    <div>
 </div>
 
 <footer class="footer"></footer>
