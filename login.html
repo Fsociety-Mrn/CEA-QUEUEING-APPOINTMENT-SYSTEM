@@ -23,6 +23,15 @@
             max-width: 400px;
             width: 100%;
         }
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .button-container a {
+            flex: 1;
+            margin: 0 10px;
+        }
         .input-container {
             margin-bottom: 20px;
         }
@@ -73,11 +82,18 @@
             <input type="text" id="name" placeholder="Name">
             <input type="text" id="status" placeholder="Status">
         </div>
-        <a  href="facial.html">
-            <button id="button1" >Use Facial Recognition</button>
-        </a>
-      
+        <div class="button-container">
+            <a href="facial.html">
+                <button id="button1">Use Facial Recognition</button>
+            </a>
+            <a href="/admin">
+                <button id="button2">Back to the appointment table</button>
+            </a>
+        </div>
     </div>
+    
+ 
+  
 
     <div id="notification"></div>
 

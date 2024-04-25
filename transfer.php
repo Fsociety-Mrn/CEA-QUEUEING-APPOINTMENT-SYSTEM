@@ -20,7 +20,7 @@ if ($row) {
     $stmtInsert->bindParam(':professor', $row['professor'], PDO::PARAM_STR);
     $stmtInsert->bindParam(':date', $row['date'], PDO::PARAM_STR);
     $stmtInsert->bindParam(':uid', $row['uid'], PDO::PARAM_STR);
-    $status = "proceed"; // Set the status to "proceed"
+    $status = "reject"; // Set the status to "proceed"
     $stmtInsert->bindParam(':status', $status, PDO::PARAM_STR);
 
     if ($stmtInsert->execute()) {

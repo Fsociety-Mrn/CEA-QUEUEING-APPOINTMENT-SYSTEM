@@ -8,11 +8,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/Display.css">
     <title>Pending</title>
+    <link rel="stylesheet" type="text/css" href="css/util.css">
+    <link rel="stylesheet" type="text/css" href="css/main.css">
     <style>
         .containers {
             display: flex;
             flex-direction: row; /* Make it row to place items side by side */
             justify-content: space-between;
+        }
+        .containers_button {
+            display: flex;
+            flex-direction: row; /* Make it row to place items side by side */
+            justify-content: center;
         }
 
         .left-table,
@@ -23,6 +30,8 @@
             border-radius: 10px;
             padding: 20px;
             margin: 10px;
+            height: 400px; /* Set a fixed height */
+            overflow-y: auto; /* Add scrollbar when content overflows */
         }
 
         .left-table h2,
@@ -57,6 +66,8 @@
     <div class="header_photo2">
         <img class="RTUlogo" src="images/rtu_logo.png" alt="">
     </div>
+
+
 </header>
 
 <div class="containers">
@@ -136,6 +147,18 @@
     </div>
 </div>
 
+<div class="containers_button" style="text-align: center; margin-top: 20px; ">
+
+    <div style="width: 200px;">
+        <a href="/jegg">
+            <button class="login100-form-btn">Back to the form</button>
+        </a>
+         
+    <div>
+</div>
+<br>
+
+
 <footer class="footer"></footer>
 
 <script>
@@ -150,11 +173,12 @@
         };
         xhr.open('GET', 'transfer.php', true);
         xhr.send();
-    }, 300000); // 5 minutes in milliseconds
 
-    setTimeout(function() {
-        location.reload();
-    }, 5000); // 2 minutes in milliseconds
+        // Reload the page after 5 minutes
+        setTimeout(function() {
+            location.reload();
+        }, 300000); // 5 minutes in milliseconds
+    }, 300000); // 5 minutes in milliseconds
 </script>
 
 </body>
