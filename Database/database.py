@@ -426,7 +426,7 @@ class MySQL_Database:
             cursor = conn.cursor(dictionary=True)
         
             # Select all rows from the HISTORY table
-            select_query = f"SELECT * FROM `{table}` WHERE professor=%s"
+            select_query = f"SELECT * FROM `{table}` WHERE professor=%s ORDER BY date DESC"
             cursor.execute(select_query,(name,))
 
             # Fetch all rows from the result set
