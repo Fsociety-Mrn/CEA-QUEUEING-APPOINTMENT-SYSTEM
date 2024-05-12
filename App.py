@@ -472,7 +472,7 @@ def check_login():
 @app.route('/show_appointment', methods=['POST'])
 @requires_access_token
 def show_appointment():
-    
+     
     try:
         
         # Get the JSON data from the request body
