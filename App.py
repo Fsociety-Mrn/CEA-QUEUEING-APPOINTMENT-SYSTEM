@@ -20,6 +20,7 @@ app.config['SECRET_KEY'] = os.environ.get("ACCESS_TOKEN")
 app.config["FACE_RESULT"] = ""
 app.config["CAMERA_STATUS"] = "Please wait camera is Loading"
 app.config["ACCOUNT_CREATED"] = ""
+
 """
 BASIC HTTP REQUEST
 
@@ -184,12 +185,12 @@ def video_feed():
     app.config["CAMERA_STATUS"] = "Please wait camera is Loading"
     app.config["database"] = False
 
-    cv2.destroyAllWindows()
+    # cv2.destroyAllWindows()
     
     # Check if the 'token' parameter is provided in the request
-    # token = request.args.get('token')
-    # if not token or not authenticate_token(token):
-    #     return Response("Unauthorized", status=401)
+    token = request.args.get('token')
+    if not token or not authenticate_token(token):
+        return Response("Unauthorized", status=401)
     
     # load a camera,face detection
     camera = cv2.VideoCapture(0)

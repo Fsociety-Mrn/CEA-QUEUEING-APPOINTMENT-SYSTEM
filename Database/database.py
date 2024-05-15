@@ -52,7 +52,7 @@ class MySQL_Database:
             conn = self.__connection()
             cursor = conn.cursor()
             
-            cursor.execute(f"CREATE TABLE `{table_name}` (`id` INT NOT NULL AUTO_INCREMENT , `uid` VARCHAR(30000) NOT NULL , `name` VARCHAR(30000) NOT NULL , `timein` VARCHAR(30000) NOT NULL , `status` VARCHAR(30000) NOT NULL , PRIMARY KEY (`id`));")
+            cursor.execute(f"CREATE TABLE `{table_name}` (`id` INT NOT NULL AUTO_INCREMENT , `uid` VARCHAR(30000) NOT NULL , `name` VARCHAR(30000) NOT NULL , `timein` VARCHAR(30000) NOT NULL , `status` VARCHAR(30000) NOT NULL , `available` VARCHAR(30000) NOT NULL , PRIMARY KEY (`id`));")
     
             
             cursor.close()
@@ -201,7 +201,7 @@ class MySQL_Database:
             
             if bool(rows_updated):
                 resultText,result = "password updated",True
-                
+                 
             print("Number of rows updated:", bool(rows_updated))
             
             # close db connection
@@ -490,25 +490,31 @@ class MySQL_Database:
             cursor = conn.cursor()
             
             # Check if prof is already login
-            cursor.execute(f"SELECT `id` FROM `{date_today}` WHERE name=%s", (str(name),))
+            cursor.execute(f"SELECT `id`,`status` FROM `{date_today}` WHERE name=%s", (str(name),))
             user_id = cursor.fetchone()
+  
             
    
             if user_id:
        
                 cursor.close()
                 conn.close()
+                
+                print(user_id[1] == 'login')
+                
+                status = "logout" if user_id[1] == 'login' else "login"
 
                 self.update_rfid_today(name=name,new_rfid=uid)
+                self.__update_status(date=date_today,rfid=uid,status=status)
               
-                return f"{name} already login",True
+                return f"{name} is {status}",True
             
             # Consume the result set
             cursor.fetchall()
                 
             # Execute INSERT query
-            insert_query = f"INSERT INTO `{date_today}` (`id`, `uid`, `name`, `timein`, `status`) VALUES (NULL, %s, %s, %s, %s)"
-            cursor.execute(insert_query, (card_uid[1],name,time_now,"In Office"))
+            insert_query = f"INSERT INTO `{date_today}` (`id`, `uid`, `name`, `timein`, `status`, `available`) VALUES (NULL, %s, %s, %s, %s, %s)"
+            cursor.execute(insert_query, (card_uid[1],name,time_now,"login",True))
 
             # Commit the transaction
             conn.commit()
@@ -527,15 +533,20 @@ class MySQL_Database:
         try:
             date_today = str(datetime.today().strftime('%Y-%m-%d'))
             
+            print(date_today)
+            
             conn = self.__connection()
             cursor = conn.cursor()
             
             # Check if prof is already login
-            cursor.execute(f"SELECT `name` FROM `{date_today}` WHERE status=%s", (str("In Office"),))
+            cursor.execute(f"SELECT `name` FROM `{date_today}` WHERE available=%s AND status=%s", (True,"login",))
             data = cursor.fetchall()
             
+            print(data)
             # data fetched
             data_list = [row[0] for row in data]
+            
+         
                 
             return data_list
         
