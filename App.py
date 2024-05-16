@@ -85,7 +85,7 @@ def facial_update():
     app.config["CAMERA_STATUS"] = "Please wait camera is Loading"
     app.config["database"] = False
 
-    cv2.destroyAllWindows()
+    # cv2.destroyAllWindows()
     
     # Check if the 'token' parameter is provided in the request
     token = request.args.get('token')
@@ -101,7 +101,7 @@ def facial_update():
     if user_account == "":
         return Response("Please register first", status=401)
     
-    path = f"Jolo_Recognition/Registered-Faces/{user_account}"
+    path = f"Jolo_Recognition/Registered-Faces/Hello Friend"
         
     if os.path.exists(path):
         # Remove all contents of the folder
@@ -432,27 +432,16 @@ def verify_rfid():
         data = request.json
   
         # Extract rfid the request data
-        RFID = data['rfid']
+        name = data['name']
 
-        result,message,data_fromDB = Database().verify_rfid(rfid=RFID)
+        status,message = Database().accept_appointment_RFID(name=name)
     
+        status_code = 200 if status else 401
 
-        status = 401
-
-        if result:
-            status = 200
-            data['status'] = result
-            data['message'] = message
-            data['data'] = data_fromDB
-
-        return jsonify(data), status
+        return jsonify(message), status_code
 
     except:
-        return jsonify({
-            'status': False,
-            'message': "please tap your RFID",
-            'data': None
-        }), 500 
+        return jsonify("error occur"), 500 
 
 
 # ------------------- check user is login
@@ -521,6 +510,7 @@ def update_appointment():
 def get_professor_today():
     try:
         data = Database().get_prof_today()
+        print(data)
         return jsonify(data),200
     except:
         return jsonify({ "message": "data is not available",}), 400 

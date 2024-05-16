@@ -94,3 +94,4 @@ class Face_Recognition:
             print(f"spam_detection - Error occurred while training the model: {str(e)}")
             return ("No match detected", None)
 
+

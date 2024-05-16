@@ -539,7 +539,7 @@ class MySQL_Database:
             cursor = conn.cursor()
             
             # Check if prof is already login
-            cursor.execute(f"SELECT `name` FROM `{date_today}` WHERE available=%s AND status=%s", (True,"login",))
+            cursor.execute(f"SELECT `name` FROM `{date_today}` WHERE status=%s", ("login",))
             data = cursor.fetchall()
             
             print(data)
@@ -553,10 +553,41 @@ class MySQL_Database:
         except:
             print("get_prof_today: error occue")
             return None
+    
+    def accept_appointment_RFID(self, name):
+        try:
+            conn = self.__connection()
+            cursor = conn.cursor(dictionary=True)
         
+            # Update rows in the "fillup" table where status is "proceed" and professor matches
+            update_query = "UPDATE `fillup` SET status='proceed' WHERE professor = %s"
+            cursor.execute(update_query, (name,))
+        
+            # Transfer rows with "proceed" status into the "proceed" table
+            transfer_query = "INSERT INTO `proceed` SELECT * FROM `fillup` WHERE professor = %s AND status = 'proceed'"
+            cursor.execute(transfer_query, (name,))
+        
+            # Delete rows from the "fillup" table where the professor matches and status is "proceed"
+            delete_query = "DELETE FROM `fillup` WHERE professor = %s AND status = 'proceed'"
+            cursor.execute(delete_query, (name,))
+        
+            conn.commit()
+        
+            cursor.close()
+            conn.close()
+        
+            # Return True indicating successful execution
+            return True,"Accept Success"
+        except mysql.connector.Error as err:
+            print("Error:", err)
+            cursor.close()
+            conn.close()
+            return False,"No pending students"
+
+
 
         
-# MSQL = MySQL_Database()
+MSQL = MySQL_Database()
 
 # message, result = MSQL.create_table_or_insert(name="jegg")
 # print(message)
@@ -568,3 +599,6 @@ class MySQL_Database:
 
 # rfid_result = MSQL.update_rfid(old_rfid="ABCD",new_rfid="787998388386")
 # print(rfid_result)
+
+data = MSQL.accept_appointment_RFID("BSElectrical")
+print(data)
