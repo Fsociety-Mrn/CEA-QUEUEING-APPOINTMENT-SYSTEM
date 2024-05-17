@@ -481,6 +481,52 @@ def show_appointment():
             "please provide valid data",
         }), 500 
         
+
+@app.route('/update_available', methods=['POST'])
+@requires_access_token
+def update_available():
+     
+    try:
+        
+        # Get the JSON data from the request body
+        data = request.json
+        name = data['name']
+        available = data['available']
+        
+   
+        data = Database().update_available(available=available,name=name)
+    
+        return jsonify(data),200
+
+    except:
+
+        return jsonify({
+            "please provide valid data",
+        }), 500 
+        
+        
+@app.route('/available_show', methods=['POST'])
+@requires_access_token
+def available_show():
+     
+    try:
+        
+        # Get the JSON data from the request body
+        data = request.json
+        name = data['name']
+
+        
+   
+        data = Database().available_status(name=name)
+    
+        return jsonify(data),200
+
+    except:
+
+        return jsonify({
+            "please provide valid data",
+        }), 500 
+        
 # ------------------- update appointment data
 @app.route('/update_appointment', methods=['PUT'])
 @requires_access_token

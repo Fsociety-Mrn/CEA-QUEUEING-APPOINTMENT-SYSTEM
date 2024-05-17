@@ -584,6 +584,74 @@ class MySQL_Database:
             conn.close()
             return False,"No pending students"
 
+    def update_available(self,available=None,name=None):
+        try:
+            conn = self.__connection()
+            cursor = conn.cursor()
+
+            date_today = str(datetime.today().strftime('%Y-%m-%d'))
+
+            # Check if username exists
+            cursor.execute(f"UPDATE `{date_today}` SET `available`=%s WHERE `name`= %s",(available,name,))
+            conn.commit()
+            
+            # Fetch the number of rows updated
+            rows_updated = cursor.rowcount
+            resultText,result = "Please Login",False
+            
+            if bool(rows_updated):
+                resultText,result = "available updated",True
+                
+
+            # close db connection
+            cursor.close()
+            conn.close()
+            return result,resultText
+        
+        except Exception as Err:
+            pass
+            print("update_password:", Err)
+            
+            cursor.close()
+            conn.close()
+            
+            return False,"Error while updating"
+        
+    # read specific data
+    def available_status(self,name):
+        try:
+
+            conn = self.__connection()
+            cursor = conn.cursor()
+            
+            date_today = str(datetime.today().strftime('%Y-%m-%d'))
+  
+            # Delete the specified record from the HISTORY table
+            read_query = f"SELECT available FROM `{date_today}` WHERE name = %s"
+            cursor.execute(read_query, (name,))
+            data = cursor.fetchone()
+
+            if data:
+                cursor.close()
+                conn.close()
+                
+                print(data[0])
+                return False if int(data[0]) == 0 else True
+        
+            cursor.close()
+            conn.close()
+            print("read_data: No data")
+            return False
+
+        except mysql.connector.Error as err:
+            
+            print("__read_specific_Data:", err)
+            cursor.close()
+            conn.close()
+            return False
+        
+        
+        
 
 
         
@@ -600,5 +668,7 @@ MSQL = MySQL_Database()
 # rfid_result = MSQL.update_rfid(old_rfid="ABCD",new_rfid="787998388386")
 # print(rfid_result)
 
-data = MSQL.accept_appointment_RFID("BSElectrical")
+# MSQL.update_available(name="Hello Friend",available=True)
+
+data = MSQL.available_status(name="Hello Friend")
 print(data)
