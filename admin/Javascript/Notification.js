@@ -108,12 +108,23 @@ async function getAllAppointment(getName){
     }
 }
 
+
+    // Function to convert the database date format to a comparable format (YYYY-MM-DD)
+    const convertDateFormat = dateString => {
+      const dateObj = new Date(dateString);
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0'); // Month is zero-based
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
 // Function to render data into the table
 function renderTableData(data,tableName,type) {
     const tableBody = document.getElementById(tableName).querySelector('tbody');
     tableBody.innerHTML = ''
     if (tableName === "pending"){
 
+    
         // Loop through the fetched data and populate the table
         data.forEach(appointment => {
             const row = document.createElement('tr');

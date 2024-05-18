@@ -1,5 +1,3 @@
-<?php include './connect.php'; ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,6 +5,11 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="./css/Display.css">
+
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+
     <title>Pending</title>
     <style>
         .table {
@@ -16,7 +19,7 @@
             border-radius: 10px;
             padding: 20px;
             margin: 10px;
-            height: 350px; 
+            height: 50%; 
             overflow-y: auto; 
         }
 
@@ -34,59 +37,75 @@
              width: 30%; /* Adjust the width as needed */
              height: 50px; /* Adjust the height as needed */
         }
-
-        /*------------------------------------------------------------------
-[ Button ]*/
-.container-login100-form-btn {
-  width: 100%;
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: -moz-box;
-  display: -ms-flexbox;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.login100-form-btn {
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: -moz-box;
-  display: -ms-flexbox;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 0 20px;
-  width: 100%;
-  height: 50px;
-  border-radius: 10px;
-  background: #6675df;
-
-  font-family: Montserrat-Bold;
-  font-size: 12px;
-  color: #fff;
-  line-height: 1.2;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-
-  -webkit-transition: all 0.4s;
-  -o-transition: all 0.4s;
-  -moz-transition: all 0.4s;
-  transition: all 0.4s;
-}
-
-.login100-form-btn:hover {
-  background: #333333;
-}
-
-.containers_button {
+        .container-login100-form-btn {
+            width: 100%;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -moz-box;
+            display: -ms-flexbox;
             display: flex;
-            flex-direction: row; /* Make it row to place items side by side */
+            flex-wrap: wrap;
             justify-content: center;
         }
-  
+        .login100-form-btn {
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -moz-box;
+            display: -ms-flexbox;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0 20px;
+            width: 100%;
+            height: 50px;
+            border-radius: 10px;
+            background: #6675df;
+            font-family: Montserrat-Bold;
+            font-size: 12px;
+            color: #fff;
+            line-height: 1.2;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            -webkit-transition: all 0.4s;
+            -o-transition: all 0.4s;
+            -moz-transition: all 0.4s;
+            transition: all 0.4s;
+        }
+        .login100-form-btn:hover {
+            background: #333333;
+        }
 
-      
+  
+        .accept-btn, .reject-btn {
+            width: 50%;
+            height: 30px;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+        .accept-btn {
+            background-color: green;
+            color: white;
+        }
+        .reject-btn {
+            background-color: #fff;
+            color: white;
+        }
+        .containers_button {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center; /* Center items vertically */
+            width: 100px;
+            gap: 10px; 
+        }
+        .containers_button_again {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center; /* Center items vertically */
+            width: 120px;
+            gap: 10px; 
+        }
     </style>
 </head>
 <body>
@@ -104,44 +123,188 @@
 <div class="table">
     <!-- Table Content Goes Here -->
     <h2>APPOINTMENT</h2>
+
+    <table id='fillup-table'>
+    <tr><th>ID</th><th>Professor</th><th>Student Name</th><th>Course</th><th>Section</th><th>Action</th></tr>
     <?php
-        // Include your database connection file
-        include './connect.php';
+// Include your database connection file
+include './connect.php';
 
-        // Example PDO code to fetch data from the database and display it in the table
-        $sql = "SELECT uid, professor, name, course, section FROM fillup";
-        $result = $conn->query($sql);
+      // Get the current date in the format YYYY-MM-DD
+      $currentDate = date("Y-m-d");
 
-        if ($result->rowCount() > 0) {
-            echo "<table>";
-            echo "<tr><th>ID</th><th>Professor</th><th>Student Name</th><th>Course</th><th>Section</th></tr>";
-            while($row = $result->fetch(PDO::FETCH_ASSOC)) {
-                echo "<tr><td>" . $row["uid"] . "</td><td>" . $row["professor"] . "</td><td>" . $row["name"] . "</td><td>" . $row["course"] . "</td><td>" . $row["section"] . "</td></tr>";
-            }
-            echo "</table>";
-        } else {
-            echo "No Pending";
-        }
-    ?>
+// Example PDO code to fetch data from the database and display it in the table
+$sql = "SELECT uid, professor, name, course, section FROM fillup WHERE DATE(date) = :currentDate ORDER BY date DESC";
+$result = $conn->prepare($sql);
+$result->bindParam(':currentDate', $currentDate);
+$result->execute();
+
+
+if ($result->rowCount() > 0) {
+
+    echo "<tr><th>ID</th><th>Professor</th><th>Student Name</th><th>Course</th><th>Section</th><th>Action</th></tr>";
+    while($row = $result->fetch(PDO::FETCH_ASSOC)) {
+        echo "<tr><td>" . $row["uid"] . "</td><td>" . $row["professor"] . "</td><td>" . $row["name"] . "</td><td>" . $row["course"] . "</td>";
+        echo "<td> 
+                <div class='containers_button_again'>" . $row["section"] . "</div>
+            </td>";
+        echo "<td>";
+        echo "<div class='containers_button'>";
+            echo "<button class='accept-btn' onclick=\"acceptAppointment('" . $row['uid'] . "')\">✔</button>"; // Pass uid to JavaScript function
+            echo "<button class='reject-btn' onclick=\"acceptAppointment('" . $row['uid'] . "')\">❌</button>"; // Pass uid to JavaScript function
+        echo "</div>";
+        echo "</td></tr>";
+    }
+
+} else {
+    echo "No Pending";
+}
+?>
+</table>
+
 </div>
 
-<div class="containers_button" style="text-align: center; margin-top: 20px; ">
 
-    <div style="width: 200px;">
-        <a href="/jegg/login.html">
-            <button class="login100-form-btn">Employee Login</button>
-        </a>
-         
-    <div>
-</div>
+
 
 <footer class="footer"></footer>
 
-<script>
-    setTimeout(function() {
-        location.reload();
-    }, 5000); // 2 minutes in milliseconds
-</script>
+<script src="./EnvSecret.js"></script>
+
+
+
+
+
 
 </body>
+<script>
+
+// Function to update the table
+function updateTable() {
+    $.ajax({
+        url: 'update_table.php', // URL of your PHP script to fetch updated data
+        success: function(response) {
+            console.log("running");
+            $('#fillup-table').html(response);
+        }
+    });
+}
+
+// Update the table every second
+setInterval(updateTable, 500);
+
+function acceptAppointment(uid) {
+        alert("Accepted UID: " + uid);
+        // You can add your logic here to handle accepting the appointment
+    }
+
+    function rejectAppointment(uid) {
+        alert("Rejected UID: " + uid);
+        // You can add your logic here to handle rejecting the appointment
+    }
+
+
+    async function verify_rfid(rfid, name) {
+            try {
+                const response = await fetch(mySecrets().api + "/verify_rfid", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': mySecrets().secret
+                    },
+                    body: JSON.stringify({
+                        name: name
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    alert(data + name + rfid);
+                    location.reload();
+
+                    // const NameElement = document.getElementById('name');
+                    // const StatusElement = document.getElementById('status');
+                    // NameElement.value = name;
+                    // StatusElement.value = data.data;
+
+                    // // Display notification
+                    // const notification = document.getElementById('notification');
+                    // notification.textContent = name + " is " + data.data;
+                    // notification.style.display = 'block';
+
+                    // Reload the page after a short delay
+                    // setTimeout(() => {
+                    //     location.reload();
+                    // }, 3000);
+
+                } else {
+                    throw new Error(`Error: ${response.status} ${response.statusText}`);
+                }
+            } catch (error) {
+                console.error('There was a problem with the fetch operation:', error);
+                const notification = document.getElementById('notification');
+                notification.textContent = 'Please Login before tap your RFID';
+                notification.style.display = 'block';
+                throw error;
+            }
+        }
+
+// Function to fetch RFID data
+async function get_RFID() {
+    try {
+        const response = await fetch(mySecrets().raspberry + "/get_rfid", {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            console.log(data);
+            await verify_rfid(data.ID, data.TEXT);
+        } else {
+            throw new Error(`Error: ${response.status} ${response.statusText}`);
+        }
+    } catch (error) {
+        console.error('There was a problem with the fetch operation:', error);
+        location.reload();
+        throw error;
+    }
+}
+
+// Call get_RFID function
+get_RFID();
+
+
+async function get_IRsensor() {
+    try {
+        const response = await fetch(mySecrets().raspberry + "/IR_sensor", {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            console.log(data);
+            if (data.status){
+                location.href = "/admin/facial.html"
+            }
+
+        } else {
+            throw new Error(`Error: ${response.status} ${response.statusText}`);
+        }
+    } catch (error) {
+        console.error('There was a problem with the fetch operation:', error);
+
+        throw error;
+    }
+}
+
+setInterval(get_IRsensor, 1000);
+
+
+</script>
 </html>

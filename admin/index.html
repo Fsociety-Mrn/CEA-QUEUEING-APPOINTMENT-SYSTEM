@@ -22,6 +22,103 @@
   <link rel="shortcut icon" href="images/favicon.png" />
 </head>
 
+<style>
+  /* Navbar container */
+.navbar-container {
+  position: fixed;
+  top: 15px; /* Adjust as needed */
+  right: 100px; /* Adjust as needed */
+  z-index: 9999; /* Adjust as needed */
+}
+
+/* Switch button styles */
+.switch-container {
+  display: inline-block;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+.switch input { 
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+/* Status text styles */
+#admin-status-text {
+  display: inline-block;
+  margin-left: 10px; /* Adjust as needed */
+}
+
+/* Responsive styles */
+@media screen and (max-width: 767px) {
+  .navbar-container {
+    top: auto;
+    bottom: 15px;
+    right: 15px;
+    left: 15px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .switch-container {
+    margin-right: 10px; /* Adjust as needed */
+    margin-left: 10px; /* Adjust as needed */
+  }
+
+  #admin-status-text {
+    margin-left: 0;
+    margin-top: 5px; /* Adjust as needed */
+  }
+}
+
+  
+</style>
 <body>
   <div class="container-scroller">
     <!-- partial:partials/_navbar.html -->
@@ -46,6 +143,26 @@
             </div>
           </li>
         </ul>
+
+        <!-- SWITCH BUTTON -->
+        <div class="navbar-container">
+          <ul class="navbar-nav mr-lg-2">
+            <li class="nav-item nav-admin-status d-none d-lg-block">
+              <div class="switch-container">
+                <label class="switch">
+                  <input type="checkbox" id="admin-status-toggle">
+                  <span class="slider"></span>
+                </label>
+                <span id="admin-status-text">Offline</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+        
+        
+        
+        
+        
         <ul class="navbar-nav navbar-nav-right">
           
           <li class="nav-item nav-profile dropdown">
@@ -155,13 +272,130 @@
   <script src="../EnvSecret.js"></script>
   <script src="./Javascript/CheckLogin.js"></script>
 
-  <script >
 
+  <script>
     function Logout(){
       sessionStorage.clear();
       window.location.href = '/admin/Login.php'; 
     }
+  </script>
+  <script >
 
+
+
+
+    // TOGGLE BUTTON  
+    document.addEventListener("DOMContentLoaded", async function() {
+      var statusText = document.getElementById("admin-status-text");
+      var switchToggle = document.getElementById("admin-status-toggle");
+    
+      // Initial status
+      await updateStatus();
+    
+      // Update status when switch toggled
+      switchToggle.addEventListener("change", async function(e) {
+        event.preventDefault();
+        await updateStatus();
+      });
+    
+      async function updateStatus() {
+        if (switchToggle.checked) {
+          statusText.textContent = "Online";
+          await update_available(true);
+
+
+        } else {
+          statusText.textContent = "Offline";
+          await update_available(false);
+
+        }
+
+
+     
+
+        if (sessionStorage.textContent === "true") {
+          statusText.textContent = "Online";
+          switchToggle.checked = true; 
+
+        } else {
+          statusText.textContent = "Offline";
+          switchToggle.checked = false; 
+        }
+
+
+      }
+    });
+
+
+    async function update_available(available) {
+      try {
+            const response = await fetch(mySecrets().api + "/update_available", {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': mySecrets().secret
+              },
+              body: JSON.stringify({
+                name: sessionStorage.getItem("name"),
+                available: available
+              })
+          });
+  
+         
+          const data = await response.json();
+          console.log(data)
+  
+      } catch (error) {
+          console.error('There was a problem with the fetch operation:', error);
+      }
+  
+    }
+
+    async function show_appointment() {
+      try {
+
+
+        var switchToggle = document.getElementById('admin-status-toggle');
+        var statusText = document.getElementById("admin-status-text");
+
+            const response = await fetch(mySecrets().api + "/available_show", {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': mySecrets().secret
+              },
+              body: JSON.stringify({
+                name: sessionStorage.getItem("name"),
+
+              })
+          });
+  
+         
+          const data = await response.json();
+          console.log(data)
+
+
+          switchToggle.checked = Boolean(data); 
+
+          if (switchToggle.checked) {
+            statusText.textContent = "Online";
+            sessionStorage.setItem("toggleState", "true");
+
+          } else {
+            statusText.textContent = "Offline";
+            sessionStorage.setItem("toggleState", "false");
+          }
+
+  
+      } catch (error) {
+          console.error('There was a problem with the fetch operation:', error);
+      }
+  
+    }
+    
+    show_appointment();
+  setInterval(show_appointment,200);
+    
   </script>
   <!-- End custom js for this page-->
 </body>
