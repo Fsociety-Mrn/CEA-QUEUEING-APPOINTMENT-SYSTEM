@@ -82,11 +82,10 @@
             $currentDate = date("Y-m-d");
 
             // Example PDO code to fetch data from the database and display it in the table
-            $sql = "SELECT uid, name, department, status FROM fillup WHERE DATE(date) = :currentDate";
+            $sql = "SELECT uid, name, department, status FROM fillup WHERE DATE(date) = :currentDate ORDER BY date DESC";
             $result = $conn->prepare($sql);
             $result->bindParam(':currentDate', $currentDate);
             $result->execute();
-
 
             if ($result->rowCount() > 0) {
                 echo "<table>";
@@ -114,15 +113,19 @@
             include 'connection/connect.php';
 
             // Get the current date in the format YYYY-MM-DD
-            $currentDate = date("Y-m-d");
+            $currentDateTime = date("Y-m-d H:i:s");
 
             // Example PDO code to fetch data from the database and display it in the table
-            $sql = "SELECT uid, name, department, status FROM proceed WHERE DATE(date) = :currentDate";
+            $sql = "SELECT uid, name, department, status FROM proceed WHERE DATE(date) = :currentDate ORDER BY date DESC";
             $stmt = $conn->prepare($sql);
             $stmt->bindParam(':currentDate', $currentDate);
             $stmt->execute();
 
             if ($stmt->rowCount() > 0) {
+                
+        
+            
+
                 echo "<table>";
                 echo "<tr>
                     <th>ID</th>
@@ -131,6 +134,9 @@
                     <th>Status</th>
                 </tr>";
                 while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+
+            
+
                 echo "<tr>
                         <td>" . $row["uid"] . "</td>
                         <td>" . $row["name"] . "</td>
@@ -139,6 +145,8 @@
                     </tr>";
                 }
                 echo "</table>";
+
+        
             } else {
                 echo "No Pending";
             }
@@ -162,23 +170,28 @@
 <footer class="footer"></footer>
 
 <script>
-    setTimeout(function() {
-        // Move data from fillup to proceed table using AJAX
-        var xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState == 4 && xhr.status == 200) {
-                // Update the proceed table content
-                document.getElementById('proceed-table').innerHTML = xhr.responseText;
-            }
-        };
-        xhr.open('GET', 'transfer.php', true);
-        xhr.send();
 
-        // Reload the page after 5 minutes
-        setTimeout(function() {
+            setTimeout(function() {
             location.reload();
-        }, 300000); // 5 minutes in milliseconds
-    }, 300000); // 5 minutes in milliseconds
+        }, 1000); // 5 minutes in milliseconds
+
+    // setTimeout(function() {
+    //     // Move data from fillup to proceed table using AJAX
+    //     var xhr = new XMLHttpRequest();
+    //     xhr.onreadystatechange = function() {
+    //         if (xhr.readyState == 4 && xhr.status == 200) {
+    //             // Update the proceed table content
+    //             document.getElementById('proceed-table').innerHTML = xhr.responseText;
+    //         }
+    //     };
+    //     xhr.open('GET', 'transfer.php', true);
+    //     xhr.send();
+
+    //     // Reload the page after 5 minutes
+    //     setTimeout(function() {
+    //         location.reload();
+    //     }, 15000); // 5 minutes in milliseconds
+    // }, 15000); // 5 minutes in milliseconds
 </script>
 
 </body>

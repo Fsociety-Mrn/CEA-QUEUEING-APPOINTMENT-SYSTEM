@@ -27,6 +27,40 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
     <!--===============================================================================================-->
 </head>
+<audio id="successSound" style="display:none;">
+  <source src="success.wav" type="audio/wav">
+</audio>
+<style>
+     .table-container {
+    margin-top: 20px; /* Add margin at the top */
+    height: 200px; /* Set the desired height for the scrollable area */
+    overflow-y: auto; /* Enable vertical scrolling */
+    border: 1px solid #ddd; /* Add border for visual clarity */
+}
+
+
+.table-wrapper {
+    width: 100%; /* Ensure table takes full width */
+}
+
+.professor-table {
+    width: 100%;
+    border-collapse: collapse;
+    /* Remove margin-top: 20px; */
+}
+
+.professor-table th, .professor-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.professor-table th {
+    background-color: #f2f2f2;
+}
+
+
+    </style>
 <body style="background-color: #666666;">
     
     <div class="limiter">
@@ -81,36 +115,113 @@
                         <span class="label-input100">Professor</span> -->
                         <select class="input100" name="professor" id="professor">
                             <option>Choose Professor</option>
-                            <!-- <option value="BSCompEng">Rizal Laqui</option>
+                            <option value="BSCompEng">Rizal Laqui</option>
                             <option value="BSElectrical">Ronel Paglomutan</option>
-                            <option value="BSElectronics">Ezekiel Nequit</option> -->
+                            <option value="BSElectronics">Ezekiel Nequit</option>
                             
                         </select>
 
                         <span class="focus-input100"></span>
                         <span class="label-input100">Professor</span>
                     </div>
-
+                    
 
                     
             
                     &nbsp;
                     <div class="container-login100-form-btn">
-                        <button class="login100-form-btn">
+                        <button onclick="playSuccessSound();" class="login100-form-btn">
                             Proceed
                         </button>
                     </div>
                     
+                    
+                    <div class="table-container">
+                    <div class="table-wrapper">
+                    <table class="professor-table">
+                        <thead>
+                            <tr>
+                                <th>Professor Name</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        <?php
+            // Include your database connection file
+            include 'connection/connect.php';
+
+            // Get the current date in the format YYYY-MM-DD
+            $currentDateTime = date("Y-m-d");
+
+            // Example PDO code to fetch data from the database and display it in the table
+            $sql = "SELECT name FROM `$currentDateTime` WHERE available = :available";
+            $stmt = $conn->prepare($sql);
+            $stmt->bindValue(':available', true, PDO::PARAM_BOOL);
+            $stmt->execute();
+
+            if ($stmt->rowCount() > 0) {
+                
+                // echo "<table>";
+                // echo "<tr>
+                //     <th>ID</th>
+                //     <th>Name</th>
+                //     <th>Department</th>
+                //     <th>Status</th>
+                // </tr>";
+                while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
             
+
+                echo "<tr>
+                        <th>" . $row["name"] . "</th>
+                        <th>In Office</th>
+                    </tr>";
+                }
+    
+
+        
+            } else {
+                echo "
+                <tr>
+                <th>No Professor</th>
+                <th>Today</th>
+            </tr>
+
+                ";
+            }
+        ?>
+<!-- 
+                            <tr>
+                                <th>Ronel Paglomutan</th>
+                                <th>In Office</th>
+                            </tr>
+                            <tr>
+                                <th>Ronel Paglomutan</th>
+                                <th>In Office</th>
+                            </tr>
+                            <tr>
+                                <th>Ronel Paglomutan</th>
+                                <th>In Office</th>
+                            </tr>
+                            <tr>
+                                <th>Ronel Paglomutan</th>
+                                <th>In Office</th>
+                            </tr> -->
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
                 </form>
+                
+
                 <div id="loading-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.7); text-align: center; padding-top: 20%;">
                     <div class="spinner-border text-primary" role="status">
                         <span class="sr-only">Loading...</span>
                     </div>
                     <p>Loading...</p>
                 </div>
-
+                
                 <div class="login100-more" style="background-image: url('images/bg.png');">
                     <img src="images/rtu_logo.png" alt="Your Logo" class="logo-above-bg">
                     <img src="images/ceat_logo.png" alt="Your Logo" class="logo1-above-bg">
@@ -141,8 +252,35 @@
 <!--===============================================================================================-->
     <script src="vendor/countdowntime/countdowntime.js"></script>
 <!--===============================================================================================-->
+<script>
+
+function playSuccessSound() {
+  var audio = document.getElementById('successSound');
+  audio.play();
+}
+</script>
+
     <script src="js/main.js"></script>
     <script src="./EnvSecret.js"></script>
+    <script>
+        // Set a timeout to redirect the page after 30 seconds of inactivity
+        var redirectTimeout = setTimeout(function() {
+            window.location.href = 'pending.php'; // Redirect to pending.php after 30 seconds
+        }, 30000); // 30 seconds in milliseconds
+
+        // Reset the timeout if there's any activity
+        window.addEventListener('mousemove', resetTimer);
+        window.addEventListener('mousedown', resetTimer);
+        window.addEventListener('keypress', resetTimer);
+        
+        function resetTimer() {
+            clearTimeout(redirectTimeout);
+            redirectTimeout = setTimeout(function() {
+                window.location.href = 'pending.php'; // Redirect to pending.php after 30 seconds
+            }, 30000); // 30 seconds in milliseconds
+        }
+    </script>
+    
     <script>
         $(document).ready(function(){
     $('#myForm').submit(function(event){
@@ -166,7 +304,9 @@
         // Proceed with form submission after 3 seconds
         $('#loading-overlay').show();
         setTimeout(function(){
+            
             $('#myForm').unbind('submit').submit();
+            
         }, 3000);
     });
 });
@@ -175,24 +315,24 @@
     <script>
 
 
-        // Function to render professor options
-        function renderProfessorOptions(professorNames) {
+         // Function to render professor options
+         function renderProfessorOptions(professorNames) {
             const selectElement = document.getElementById('professor');
 
-            // Clear existing options
-            selectElement.innerHTML = '';
+             // Clear existing options
+             selectElement.innerHTML = '';
 
-            // Create default option
-            const defaultOption = document.createElement('option');
-            defaultOption.textContent = 'Choose Professor';
-            selectElement.appendChild(defaultOption);
+         // Create default option
+             const defaultOption = document.createElement('option');
+             defaultOption.textContent = 'Choose Professor';
+             selectElement.appendChild(defaultOption);
 
-            // Create options for each professor name
-            professorNames.forEach(name => {
-                const option = document.createElement('option');
-                option.value = name;
+             // Create options for each professor name
+             professorNames.forEach(name => {
+                 const option = document.createElement('option');
+                 option.value = name;
                 option.textContent = name;
-                selectElement.appendChild(option);
+                 selectElement.appendChild(option);
             });
         }
 
@@ -216,6 +356,7 @@
                     // Parse the response body as JSON
                     const data = await response.json();
 
+                    console.log(data)
                     // Render the professor options
                     renderProfessorOptions(data) ;
 

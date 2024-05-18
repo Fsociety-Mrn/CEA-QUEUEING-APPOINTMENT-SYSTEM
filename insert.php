@@ -12,8 +12,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Generate a 2-character UID (one number and one letter)
     $uid = generateRandomUid();
 
-    // Get the current date
-    $date = date("Y-m-d");
+   // Get the current date and time
+    $date = date("Y-m-d H:i:s");
+
+
 
     // Your SQL query to insert data
     $query = "INSERT INTO fillup (name, section, department, course, professor,date,uid,status) VALUES (?, ?, ?, ?, ?, ?, ?,?)";
