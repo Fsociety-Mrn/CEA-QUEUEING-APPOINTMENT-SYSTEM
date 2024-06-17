@@ -55,6 +55,10 @@
                 </div>
 
                 <div class="mt-3">
+                  <a class="btn btn-block btn-primary font-weight-medium auth-form-btn" id="rfid-button" onclick="update_status()">stop rfid</a>
+                </div>
+
+                <div class="mt-3">
                   <a class="btn btn-block btn-primary font-weight-medium auth-form-btn" id="rfid-button" onclick="register_rfid()">click to check your rfid</a>
                 </div>
 
@@ -107,6 +111,9 @@
 
     // register RFID
     async function register_rfid(){
+
+
+
       var uid = document.getElementById("rfid");
       var name = document.getElementById("name").value; 
 
@@ -142,9 +149,32 @@
    
   } catch (error) {
       console.error('There was a problem with the fetch operation:', error);
+      update_status(false);
   } 
 
     }
+
+        // update RFID status
+        async function update_status(status=true){
+
+
+          try {
+              const response = await fetch(mySecrets().raspberry + "/post_rfid_status", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': mySecrets().secret
+                },
+                body: JSON.stringify({
+                  "status": status
+                })
+            });
+            
+         
+        } catch (error) {
+            console.error('There was a problem with the fetch operation:', error);
+        }
+        }
 
     // create account
     async function create_account(){
@@ -177,13 +207,23 @@
         }
 
         const data = await response.json();
-        alert(data)
+        alert(data);
         location.reload()
      
     } catch (error) {
         console.error('There was a problem with the fetch operation:', error);
     }
     }
+
+// Event listener when the page is loaded
+window.onload = function() {
+  update_status(false);
+};
+
+// Event listener when the page is unloaded (e.g., when navigating away)
+window.onunload = function() {
+  update_status(false);
+};
   
   </script>
   <!-- endinject -->

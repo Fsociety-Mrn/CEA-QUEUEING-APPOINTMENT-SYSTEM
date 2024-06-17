@@ -249,36 +249,9 @@ function acceptAppointment(uid) {
             }
         }
 
-// Function to fetch RFID data
-async function get_RFID() {
-    try {
-        const response = await fetch(mySecrets().raspberry + "/get_rfid", {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            console.log(data);
-            await verify_rfid(data.ID, data.TEXT);
-        } else {
-            throw new Error(`Error: ${response.status} ${response.statusText}`);
-        }
-    } catch (error) {
-        console.error('There was a problem with the fetch operation:', error);
-        location.reload();
-        throw error;
-    }
-}
-
-// Call get_RFID function
-get_RFID();
 
 
-
-let intervalId; // Variable to hold the interval ID
+        let intervalId; // Variable to hold the interval ID
 
 // Function to start the interval
 function startInterval() {
@@ -313,9 +286,9 @@ async function get_Status_RFID() {
             const data = await response.json();
             console.log(data.message);
 
-            if (Boolean(data.message)){
+            if (!Boolean(data.message)){
     
-                location.href = "NoRFID.php"
+                location.href = "/admin"
             }
         } else {
             throw new Error(`Error: ${response.status} ${response.statusText}`);
