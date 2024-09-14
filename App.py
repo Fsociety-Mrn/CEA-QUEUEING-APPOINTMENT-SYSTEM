@@ -122,7 +122,7 @@ def facial_update():
     if user_account == "":
         return Response("Please register first", status=401)
     
-    path = f"Jolo_Recognition/Registered-Faces/Hello Friend"
+    path = f"Jolo_Recognition/Registered-Faces/{user_account}" 
         
     if os.path.exists(path):
         # Remove all contents of the folder
@@ -581,6 +581,8 @@ def get_professor_today():
         return jsonify(data),200
     except:
         return jsonify({ "message": "data is not available",}), 400 
+    
+
     
 if __name__ == '__main__':
     app.run(

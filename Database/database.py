@@ -224,16 +224,16 @@ class MySQL_Database:
             cursor = conn.cursor()
         
             # Check if username exists
-            cursor.execute("SELECT `id` FROM users WHERE username=%s", (username,))
-            user_id = cursor.fetchone()
+            # cursor.execute("SELECT `id` FROM users WHERE username=%s", (username,))
+            # user_id = cursor.fetchone()
         
-            if not user_id:
-                cursor.close()
-                conn.close()
-                return False,"user not found"
+            # if not user_id:
+            #     cursor.close()
+            #     conn.close()
+            #     return False,"user not found"
             
-            # Consume the result set
-            cursor.fetchall()
+            # # Consume the result set
+            # cursor.fetchall()
         
             # Check if password is correct
             cursor.execute("SELECT `id`,`uid`,`username`,`name` FROM users WHERE username=%s AND password=%s", (username, password))
