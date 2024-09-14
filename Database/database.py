@@ -539,7 +539,7 @@ class MySQL_Database:
             cursor = conn.cursor()
             
             # Check if prof is already login
-            cursor.execute(f"SELECT `name` FROM `{date_today}` WHERE status=%s", ("login",))
+            cursor.execute(f"SELECT `name` FROM `{date_today}` WHERE status=%s AND available=%s " , ("login",1,))
             data = cursor.fetchall()
             
             print(data)
@@ -564,7 +564,12 @@ class MySQL_Database:
             cursor.execute(update_query, (name,))
         
             # Transfer rows with "proceed" status into the "proceed" table
-            transfer_query = "INSERT INTO `proceed` SELECT * FROM `fillup` WHERE professor = %s AND status = 'proceed'"
+            transfer_query = """
+                INSERT INTO `proceed` (name, section, department, course, professor, date, uid, status)
+                SELECT `name`, `section`, `department`, `course`, `professor`, `date`, `uid`, `status`
+                FROM `fillup`
+                WHERE professor = %s AND status = 'proceed'
+            """
             cursor.execute(transfer_query, (name,))
         
             # Delete rows from the "fillup" table where the professor matches and status is "proceed"
@@ -655,7 +660,7 @@ class MySQL_Database:
 
 
         
-MSQL = MySQL_Database()
+# MSQL = MySQL_Database()
 
 # message, result = MSQL.create_table_or_insert(name="jegg")
 # print(message)
@@ -669,6 +674,3 @@ MSQL = MySQL_Database()
 # print(rfid_result)
 
 # MSQL.update_available(name="Hello Friend",available=True)
-
-data = MSQL.available_status(name="Hello Friend")
-print(data)

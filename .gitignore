@@ -3,3 +3,5 @@
 /JWT/__pycache__
 /Database/__pycache__
 /Jolo_Recognition/__pycache__
+/Jolo_Recognition/Model/20180402-114759-vggface2.pt
+/Jolo_Recognition/Model/data.pt

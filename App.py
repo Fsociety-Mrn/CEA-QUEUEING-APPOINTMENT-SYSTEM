@@ -10,7 +10,7 @@ import os
 import cv2
 import time
 import shutil
-
+import serial
 
 app = Flask(__name__)
 CORS(app)
@@ -77,6 +77,27 @@ def requires_access_token(f):
             return jsonify({'message': 'Invalid access token'}), 401
     return decorated
 
+# Serial Com arduino
+@app.route('/IR_sensor', methods=['GET'])
+def IR_sensor():
+    
+    try:
+        # Define the serial port and baud rate
+        ser = serial.Serial('COM3', 9600, timeout=1)  # Replace 'COM3' with the correct port name
+        ser.reset_input_buffer()
+        time.sleep(2)
+        ser.flush()
+        data = ser.readline().decode('utf-8').rstrip()
+     
+        ser.close()
+
+        return jsonify({
+            "status": not bool(int(data)),
+        })
+    except:
+        return jsonify({
+            "status": False,
+        })
 
 @app.route('/facial_update')
 def facial_update():
@@ -425,7 +446,7 @@ def create_account():
         return jsonify({"Invalid password schema"}), 500 
 
 @app.route('/verify_rfid', methods=['POST'])
-@requires_access_token
+# @requires_access_token
 def verify_rfid():
     try:
         # Get the JSON data from the request body
@@ -565,5 +586,6 @@ if __name__ == '__main__':
     app.run(
         host='0.0.0.0',
         debug=True,
+        threaded=True,
         port=8002)
 
